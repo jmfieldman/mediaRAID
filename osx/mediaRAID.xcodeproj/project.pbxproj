@@ -11,6 +11,8 @@
 		3522B20D15F9167F00351928 /* libfuse.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3522B20C15F9167F00351928 /* libfuse.dylib */; };
 		3522B20F15F9171E00351928 /* fuse_multiplex.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B20E15F9171E00351928 /* fuse_multiplex.c */; };
 		3522B21215F922A200351928 /* simplehash.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21115F922A200351928 /* simplehash.c */; };
+		3522B21A15F945D900351928 /* exlog.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21915F945D900351928 /* exlog.c */; };
+		3522B22215F94B7900351928 /* volumes.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22115F94B7900351928 /* volumes.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +36,10 @@
 		3522B21015F9173000351928 /* fuse_multiplex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fuse_multiplex.h; sourceTree = "<group>"; };
 		3522B21115F922A200351928 /* simplehash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = simplehash.c; sourceTree = "<group>"; };
 		3522B21315F922B000351928 /* simplehash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = simplehash.h; sourceTree = "<group>"; };
+		3522B21815F945CC00351928 /* exlog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = exlog.h; sourceTree = "<group>"; };
+		3522B21915F945D900351928 /* exlog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = exlog.c; sourceTree = "<group>"; };
+		3522B21F15F94B6F00351928 /* volumes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = volumes.h; sourceTree = "<group>"; };
+		3522B22115F94B7900351928 /* volumes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volumes.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +80,10 @@
 				3522B20E15F9171E00351928 /* fuse_multiplex.c */,
 				3522B21315F922B000351928 /* simplehash.h */,
 				3522B21115F922A200351928 /* simplehash.c */,
+				3522B21815F945CC00351928 /* exlog.h */,
+				3522B21915F945D900351928 /* exlog.c */,
+				3522B21F15F94B6F00351928 /* volumes.h */,
+				3522B22115F94B7900351928 /* volumes.c */,
 			);
 			name = src;
 			path = ../src;
@@ -133,6 +143,8 @@
 				3522B1C415F904E000351928 /* mediaRAID.c in Sources */,
 				3522B20F15F9171E00351928 /* fuse_multiplex.c in Sources */,
 				3522B21215F922A200351928 /* simplehash.c in Sources */,
+				3522B21A15F945D900351928 /* exlog.c in Sources */,
+				3522B22215F94B7900351928 /* volumes.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -171,6 +183,7 @@
 					"-lfuse",
 					"-lmicrohttpd",
 					"-DFUSE_USE_VERSION=26",
+					"-DEXDEBUGENABLED",
 				);
 				SDKROOT = macosx;
 			};
@@ -201,6 +214,7 @@
 					"-lfuse",
 					"-lmicrohttpd",
 					"-DFUSE_USE_VERSION=26",
+					"-DEXDEBUGENABLED",
 				);
 				SDKROOT = macosx;
 			};

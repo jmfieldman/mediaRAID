@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "simplehash.h"
 
@@ -102,23 +103,29 @@ static void remove_int(struct nlist_int **table, const char *name) {
 
 /* File handle operations */
 static struct nlist_int *open_files[SIMPLE_HASHSIZE]; /* pointer table */
+pthread_mutex_t open_files_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void init_open_fh_table() {
 	memset(open_files, 0, sizeof(open_files));
 }
 
 void set_open_fh_for_path(const char *path, int64_t fh) /* Sending -1 as FH removes entry */ {
+	pthread_mutex_lock(&open_files_mutex);
 	if (fh < 0) {
 		remove_int(open_files, path);
 	} else {
 		put_int(open_files, path, fh);
 	}
+	pthread_mutex_unlock(&open_files_mutex);
 }
 
 int64_t get_open_fh_for_path(const char *path) {
+	pthread_mutex_lock(&open_files_mutex);
+	int64_t val = -1;
 	struct nlist_int *lookup = lookup_int(open_files, path);
-	if (lookup == NULL) return -1;
-	return lookup->value;
+	if (lookup != NULL) val = lookup->value;
+	pthread_mutex_unlock(&open_files_mutex);
+	return val;
 }
 
 

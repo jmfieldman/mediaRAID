@@ -8,12 +8,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "fuse_multiplex.h"
 #include "mediaRAID.h"
+#include "simplehash.h"
 
 
 struct fuse_operations fuse_oper_struct = {
+	.init      = multiplex_init,
 	.getattr   = multiplex_getattr,
 	.readdir   = multiplex_readdir,
 	.open      = multiplex_open,
@@ -22,7 +25,16 @@ struct fuse_operations fuse_oper_struct = {
 };
 
 
+void *multiplex_init(struct fuse_conn_info *conn) {
 
+	/* Initialization of open table lookup */
+	init_open_fh_table();
+	
+	EXLog(FUSE, DBG, "Hello %d", 10);
+
+	
+	return 0;
+}
 
 int multiplex_getattr(const char *path, struct stat *stbuf) {
 	return 0;

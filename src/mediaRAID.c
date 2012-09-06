@@ -12,10 +12,9 @@
 
 #include "mediaRAID.h"
 #include "fuse_multiplex.h"
-#include "simplehash.h"
+
 
 /* Application options */
-
 ApplicationOptions_t g_application_options;
 
 #define CUSTOM_OPT_KEY(t, p, v) { t, offsetof(ApplicationOptions_t, p), v }
@@ -23,17 +22,21 @@ ApplicationOptions_t g_application_options;
 static struct fuse_opt app_opts[] =
 {
 	CUSTOM_OPT_KEY("-port %d", server_port, 14256),
+	CUSTOM_OPT_KEY("-log %s", log_file, 0),
 	FUSE_OPT_END
 };
 
+
+/* Logging */
+FILE *g_logfile = NULL;
 
 
 /* Main */
 
 int main(int argc, const char * argv[]) {
-
-	/* Initialization */
-	init_open_fh_table();
+	
+	/* Timing debug */
+	Timing_MarkStartTime();
 	
 	int ret;
 
@@ -47,6 +50,12 @@ int main(int argc, const char * argv[]) {
 		return -1;
 	}
 	
+	/* If log file defined, initialize it */
+	if (g_application_options.log_file) {
+		g_logfile = fopen(g_application_options.log_file, "ab");
+	}
+		
+	/* Begin main loop */
 	ret = fuse_main(args.argc, args.argv, &fuse_oper_struct, NULL);
 	
 	if (ret) printf("\n");
