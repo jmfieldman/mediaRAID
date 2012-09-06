@@ -1,0 +1,209 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3522B1C415F904E000351928 /* mediaRAID.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B1C315F904E000351928 /* mediaRAID.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3522B1BD15F904E000351928 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		3522B1BF15F904E000351928 /* mediaRAID */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mediaRAID; sourceTree = BUILT_PRODUCTS_DIR; };
+		3522B1C315F904E000351928 /* mediaRAID.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = mediaRAID.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3522B1BC15F904E000351928 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3522B1B415F904E000351928 = {
+			isa = PBXGroup;
+			children = (
+				3522B1C215F904E000351928 /* src */,
+				3522B1C015F904E000351928 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3522B1C015F904E000351928 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3522B1BF15F904E000351928 /* mediaRAID */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3522B1C215F904E000351928 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				3522B1C315F904E000351928 /* mediaRAID.c */,
+			);
+			name = src;
+			path = ../src;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3522B1BE15F904E000351928 /* mediaRAID */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3522B1C915F904E100351928 /* Build configuration list for PBXNativeTarget "mediaRAID" */;
+			buildPhases = (
+				3522B1BB15F904E000351928 /* Sources */,
+				3522B1BC15F904E000351928 /* Frameworks */,
+				3522B1BD15F904E000351928 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mediaRAID;
+			productName = mediaRAID;
+			productReference = 3522B1BF15F904E000351928 /* mediaRAID */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3522B1B615F904E000351928 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0440;
+				ORGANIZATIONNAME = "Jason Fieldman";
+			};
+			buildConfigurationList = 3522B1B915F904E000351928 /* Build configuration list for PBXProject "mediaRAID" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 3522B1B415F904E000351928;
+			productRefGroup = 3522B1C015F904E000351928 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3522B1BE15F904E000351928 /* mediaRAID */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3522B1BB15F904E000351928 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3522B1C415F904E000351928 /* mediaRAID.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3522B1C715F904E100351928 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		3522B1C815F904E100351928 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		3522B1CA15F904E100351928 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		3522B1CB15F904E100351928 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3522B1B915F904E000351928 /* Build configuration list for PBXProject "mediaRAID" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3522B1C715F904E100351928 /* Debug */,
+				3522B1C815F904E100351928 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3522B1C915F904E100351928 /* Build configuration list for PBXNativeTarget "mediaRAID" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3522B1CA15F904E100351928 /* Debug */,
+				3522B1CB15F904E100351928 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3522B1B615F904E000351928 /* Project object */;
+}
