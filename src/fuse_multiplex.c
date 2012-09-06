@@ -13,6 +13,7 @@
 #include "fuse_multiplex.h"
 #include "mediaRAID.h"
 #include "simplehash.h"
+#include "volumes.h"
 
 
 struct fuse_operations fuse_oper_struct = {
