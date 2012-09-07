@@ -37,7 +37,7 @@ int main(int argc, const char * argv[]) {
 	
 	/* Timing debug */
 	Timing_MarkStartTime();
-	
+			
 	int ret;
 
 	struct fuse_args args = FUSE_ARGS_INIT(argc, (char**) argv);
@@ -54,11 +54,15 @@ int main(int argc, const char * argv[]) {
 	if (g_application_options.log_file) {
 		g_logfile = fopen(g_application_options.log_file, "ab");
 	}
-		
+	
+	EXLog(ANY, DBG, "------------------------- mediaRAID starting up -----------------------");
+	
 	/* Begin main loop */
 	ret = fuse_main(args.argc, args.argv, &fuse_oper_struct, NULL);
 	
-	if (ret) printf("\n");
+	if (ret) {
+		EXLog(ANY, ERR, "error starting fuse [%d]", ret);
+	}
 	
 	/* free arguments */
 	fuse_opt_free_args(&args);

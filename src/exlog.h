@@ -80,15 +80,17 @@ typedef enum EXDebugLevel {
 
 
 #define EXLog( _component, _level, _fmt, _fmtargs... )  do { \
-if (!g_logfile) break;                                                \
 if (!(EXDEBUGCOMPONENTS | EXDBGCOMP_##_component)) break;             \
+if (!g_logfile) break;                                                \
 if (EXDBGLVL_##_level > EXDEBUGLEVEL) break;                          \
 char log_str[2048];                                                   \
-char full_str[2048];                                                  \
+/*char full_str[2048]; */                                                 \
 snprintf(log_str, 2047, _fmt, ##_fmtargs );                           \
-snprintf(full_str, 2047, "[ %9s : %6s : %3.3lf ] %s\n", EXDBGCOMP_STR_##_component , EXDBGLVL_STR_##_level , Timing_GetElapsedTime() ,  log_str);  \
-fprintf(g_logfile, "%s", full_str);                                                       \
+fprintf(g_logfile, "[ %9s : %6s : %3.3lf ] %s\n", EXDBGCOMP_STR_##_component , EXDBGLVL_STR_##_level , Timing_GetElapsedTime() ,  log_str);  \
+/*snprintf(full_str, 2047, "[ %9s : %6s : %3.3lf ] %s\n", EXDBGCOMP_STR_##_component , EXDBGLVL_STR_##_level , Timing_GetElapsedTime() ,  log_str);  */ \
+/*fprintf(g_logfile, "%s", full_str);                                            */           \
 /*[[EXRemoteLog sharedInstance] logString:fullLog]; */                           \
+fflush(g_logfile); \
 } while (0)
 
 

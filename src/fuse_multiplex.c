@@ -14,6 +14,7 @@
 #include "mediaRAID.h"
 #include "simplehash.h"
 #include "volumes.h"
+#include "httpd.h"
 
 
 struct fuse_operations fuse_oper_struct = {
@@ -31,8 +32,10 @@ void *multiplex_init(struct fuse_conn_info *conn) {
 	/* Initialization of open table lookup */
 	init_open_fh_table();
 	
-	EXLog(FUSE, DBG, "Hello %d", 10);
-
+	/* Initialize httpd daemon */
+	start_httpd_daemon(g_application_options.server_port);
+	
+	EXLog(FUSE, INFO, "multiplex_init finished");
 	
 	return 0;
 }
