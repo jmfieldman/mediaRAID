@@ -36,7 +36,7 @@ typedef struct {
 	/* raidpath concatination accelerators */
 	
 	char            concatpath[PATH_MAX];
-	int             concatpath_baselen;
+	size_t          concatpath_baselen;
 	pthread_mutex_t concatpath_mutex;
 	
 	/* Capacity */
