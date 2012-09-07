@@ -7,7 +7,9 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <jansson.h>
 
 #include "exlog.h"
@@ -16,6 +18,7 @@
 
 /* ------------------ JSON Helpers ------------------- */
 
+/* Creates a status dictionary */
 json_t *create_status(int code, char *debug_str) {
 	json_t *status = json_object();
 	json_object_set_new(status, "code", json_integer(code));
@@ -25,6 +28,7 @@ json_t *create_status(int code, char *debug_str) {
 	return status;
 }
 
+/* Creates a top-level object with the given status child */
 json_t *create_object_with_status(int code, char *debug_str) {
 	json_t *obj = json_object();
 	json_t *status = create_status(code, debug_str);
@@ -33,19 +37,53 @@ json_t *create_object_with_status(int code, char *debug_str) {
 }
 
 
+/* ------------------ Response Helpers --------------- */
+
+/* Handles the conversion from JSON->text and sending the response, then decrefs the object */
+void send_json_response(struct MHD_Connection *connection, unsigned int http_code, json_t *json_object) {
+	struct MHD_Response * response;
+	char *response_text = json_dumps(json_object, JSON_INDENT(4));
+	response = MHD_create_response_from_data(strlen(response_text), response_text, MHD_YES, MHD_NO);
+	MHD_queue_response(connection, http_code, response);
+	MHD_destroy_response(response);
+	json_decref(json_object);
+}
 
 
 /* ------------------ Action Handlers ---------------- */
 
-void handle_add_volume_request(struct MHD_Connection *connection) {
-	struct MHD_Response * response;
-	json_t *resp = create_object_with_status(2, "fuck");
-	char *response_text = json_dumps(resp, JSON_INDENT(4));
-	response = MHD_create_response_from_data(strlen(response_text), response_text, MHD_YES, MHD_NO);
-	MHD_queue_response(connection, MHD_HTTP_OK, response);
-	MHD_destroy_response(response);
+/* 
+ Adds the volume with the following GET parameters:
+ basepath: required; the path to the volume
+ alias: optional; alias for the volume
+ raidpath: optional; custom directory appendix for the raid files
+ trashpath: optional; custom directory appendix for the trash files
+ */
+void handle_volume_add_request(struct MHD_Connection *connection) {
+	
+	/* Get arguments */
+	const char *basepath = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "basepath");
+	if (!basepath || !strnlen(basepath, PATH_MAX)) {
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_INVALID_PARAM, "basepath parameter is required"));
+		return;
+	}
+
+	const char *alias     = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "alias");
+	const char *raiddirp  = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "raiddir");
+	const char *trashdirp = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "trashdir");
+
+	char raiddir[PATH_MAX];
+	char trashdir[PATH_MAX];
+	
 }
 
+/*
+ Removes the volume with the following GET parameters:
+ basepath: removes the volume with this basepath [uses this if both params are present]
+ alias: removes the volume with this alias
+ */
+void handle_volume_remove_request(struct MHD_Connection *connection) {
+}
 
 
 /* ------------------ Main Daemon -------------------- */
@@ -80,8 +118,10 @@ int httpd_access_handler (void *cls,
 
 	#define URL_MATCHES( _u ) !strncasecmp( url, _u , strlen( _u ))
 	
-	if (URL_MATCHES( "/add_volume" )) {
-		handle_add_volume_request(connection);
+	if (URL_MATCHES( "/volume/add" )) {
+		handle_volume_add_request(connection);
+	} else if (URL_MATCHES( "/volume/remove" )) {
+		handle_volume_remove_request(connection);
 	} else {
 		EXLog(COMM, DBG, "URL is not a valid command");
 		struct MHD_Response * response;

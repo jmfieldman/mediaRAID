@@ -12,6 +12,15 @@
 #include <microhttpd.h>
 
 
+/* JSON status error codes */
+
+#define MRAID_OK                                                      0
+
+#define MRAID_ERR_INVALID_PARAM                                       100
+
+#define MRAID_ERR_VOLUME_ALREADY_EXISTS                               200
+
+/* Start the daemon */
 void start_httpd_daemon(int port);
 
 

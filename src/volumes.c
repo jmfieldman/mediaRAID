@@ -14,8 +14,8 @@
 
 /* ----------------------- Default directories --------------------- */
 
-static char s_default_raiddir[PATH_MAX];
-static char s_default_trashdir[PATH_MAX];
+static char s_default_raiddir[PATH_MAX]  = "/mediaRAID";
+static char s_default_trashdir[PATH_MAX] = "/mediaRAID-trash";
 
 void set_default_raiddir(char *raiddir) {
 	strncpy(s_default_raiddir, raiddir, PATH_MAX-1);
