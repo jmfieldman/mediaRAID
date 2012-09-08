@@ -11,8 +11,11 @@
 #include <string.h>
 #include <memory.h>
 #include <libgen.h>
+#include <sys/types.h>
 #include <sys/statvfs.h>
+#include <dirent.h>
 #include "volumes.h"
+
 
 /* ----------------------- Default directories --------------------- */
 
@@ -41,6 +44,17 @@ void update_volume_byte_counters(RaidVolume_t *volume) {
 	volume->capacity_total = fsinfo.f_frsize * fsinfo.f_blocks;
 	volume->capacity_free  = fsinfo.f_frsize * fsinfo.f_bavail;
 	volume->capacity_used  = volume->capacity_total - volume->capacity_free;
+	volume->percent_free   = volume->capacity_total ? (volume->capacity_free * 100) / volume->capacity_total : 0;
+}
+
+
+void clear_active_volume_counters(RaidVolume_t *volume) {
+	if (!volume) return;
+	
+	volume->capacity_total = 0;
+	volume->capacity_free  = 0;
+	volume->capacity_used  = 0;
+	volume->percent_free   = 0;
 }
 
 
@@ -146,6 +160,7 @@ static pthread_mutex_t active_switch_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* Moves the volume from inactive/active lists, or places it there if not already on the list */
 void set_volume_active(RaidVolume_t *volume, int active) {
 	pthread_mutex_lock(&active_switch_mutex);
+	volume->active = active;
 	if (active) {
 		RaidVolume_t *t = list_remove_volume(&inactive_volumes, volume->basepath);
 		if (t) volume = t;
@@ -155,14 +170,35 @@ void set_volume_active(RaidVolume_t *volume, int active) {
 	} else {
 		RaidVolume_t *t = list_remove_volume(&active_volumes, volume->basepath);
 		if (t) volume = t;
-		volume->capacity_total = 0;
-		volume->capacity_free  = 0;
-		volume->capacity_used  = 0;
+		clear_active_volume_counters(volume);
 		if (!list_lookup_volume_by_basepath(inactive_volumes, volume->basepath)) {
 			list_add_volume(&inactive_volumes, volume);
 		}
 	}
+	volume->active = active;
 	pthread_mutex_unlock(&active_switch_mutex);
+}
+
+/* -------------------- */
+
+int volume_is_raid_ready(RaidVolume_t *volume) {
+	if (!volume) return 0;
+	
+	DIR *dir = opendir(volume->raidpath);
+	if (!dir) return 0;
+	
+	closedir(dir);
+	return 1;
+}
+
+int volume_is_trash_ready(RaidVolume_t *volume) {
+	if (!volume) return 0;
+	
+	DIR *dir = opendir(volume->trashpath);
+	if (!dir) return 0;
+	
+	closedir(dir);
+	return 1;
 }
 
 /* -------------------- */
@@ -267,14 +303,22 @@ json_t *volume_json_object(RaidVolume_t *volume) {
 	
 	json_t *obj = json_object();
 	
+	json_object_set_new(obj, "active",   json_boolean( volume->active ));
+	
 	json_object_set_new(obj, "alias",    json_string(volume->alias));
 	json_object_set_new(obj, "basepath", json_string(volume->basepath));
 	json_object_set_new(obj, "raiddir",  json_string(basename(volume->raidpath)));
 	json_object_set_new(obj, "trashdir", json_string(basename(volume->trashpath)));
 	
-	json_object_set_new(obj, "capacity_total", json_integer(volume->capacity_total));
-	json_object_set_new(obj, "capacity_free",  json_integer(volume->capacity_free));
-	json_object_set_new(obj, "capacity_used",  json_integer(volume->capacity_used));
+	if (!volume->active) return obj;
+	
+	json_object_set_new(obj, "capacity_total",  json_integer(volume->capacity_total));
+	json_object_set_new(obj, "capacity_free",   json_integer(volume->capacity_free));
+	json_object_set_new(obj, "capacity_used",   json_integer(volume->capacity_used));
+	json_object_set_new(obj, "percent_free",    json_integer(volume->percent_free));
+	
+	json_object_set_new(obj, "raid_available",  json_boolean( volume_is_raid_ready(volume) ));
+	json_object_set_new(obj, "trash_available", json_boolean( volume_is_trash_ready(volume) ));
 	
 	return obj;
 }

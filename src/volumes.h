@@ -26,6 +26,9 @@ typedef enum {
 
 typedef struct {
 	
+	/* Active */
+	int active;
+	
 	/* Alias */
 	
 	/* Alias used to identiy a volume.  Defaults to basepath */
@@ -55,6 +58,7 @@ typedef struct {
 	
 	/* Free space in bytes */
 	int64_t capacity_free;
+	int64_t percent_free;
 	
 	/* Used space in bytes */
 	int64_t capacity_used;
