@@ -14,7 +14,7 @@
 
 #include "exlog.h"
 #include "httpd.h"
-
+#include "volumes.h"
 
 /* ------------------ JSON Helpers ------------------- */
 
@@ -42,11 +42,35 @@ json_t *create_object_with_status(int code, char *debug_str) {
 /* Handles the conversion from JSON->text and sending the response, then decrefs the object */
 void send_json_response(struct MHD_Connection *connection, unsigned int http_code, json_t *json_object) {
 	struct MHD_Response * response;
-	char *response_text = json_dumps(json_object, JSON_INDENT(4));
+	char *response_text = json_dumps(json_object, JSON_PRESERVE_ORDER | JSON_INDENT(4));
 	response = MHD_create_response_from_data(strlen(response_text), response_text, MHD_YES, MHD_NO);
 	MHD_queue_response(connection, http_code, response);
 	MHD_destroy_response(response);
 	json_decref(json_object);
+}
+
+
+/* ------------------ Directory Helpers -------------- */
+
+/* Put source->dest.  Ensure leading slash, ensure no trailing slash.  dest must be pre-allocated */
+static void cleandir(const char *source, char *dest) {
+	if (!source || *source == 0) {
+		*dest = 0;
+		return;
+	}
+	
+	/* Add leading slash */
+	if (*source == '/') {
+		strncpy(dest, source, PATH_MAX);
+	} else {
+		snprintf(dest, PATH_MAX, "/%s", source);
+	}
+	
+	/* Remove trailing slash */
+	size_t len = strnlen(dest, PATH_MAX);
+	if (dest[len-1] == '/') {
+		dest[len-1] = 0;
+	}
 }
 
 
@@ -69,12 +93,50 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
 	}
 
 	const char *alias     = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "alias");
+	if (alias && *alias == 0) {
+		alias = basepath;
+	}
+	
 	const char *raiddirp  = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "raiddir");
 	const char *trashdirp = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "trashdir");
 
 	char raiddir[PATH_MAX];
 	char trashdir[PATH_MAX];
 	
+	cleandir(raiddirp, raiddir);
+	cleandir(trashdirp, trashdir);
+	
+	/* Check volume exists */
+	volume_api_lock();
+	if (volume_with_basepath(basepath)) {
+		volume_api_unlock();
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_VOLUME_ALREADY_EXISTS, "volume already exists with the specified basepath"));
+		return;
+	}
+	
+	if (volume_with_alias(alias)) {
+		volume_api_unlock();
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_VOLUME_ALREADY_EXISTS, "volume already exists with the specified alias"));
+		return;
+	}
+
+	/* Create the volume */
+	RaidVolume_t *volume = create_volume(alias, basepath, raiddir, trashdir);
+	if (!volume) {
+		volume_api_unlock();
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_VOLUME_ALLOC_ERROR, "volume could not be allocated"));
+		return;
+	}
+	
+	/* Add volume to list */
+	set_volume_active(volume, 1);
+	
+	/* Respond */
+	json_t *resp = create_object_with_status(MRAID_OK, "volume added successfully");
+	json_object_set_new(resp, "volume", volume_json_object(volume));
+	send_json_response(connection, MHD_HTTP_OK, resp);
+	
+	volume_api_unlock();
 }
 
 /*
