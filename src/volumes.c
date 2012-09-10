@@ -16,6 +16,10 @@
 #include <dirent.h>
 #include "volumes.h"
 
+// Jannson 2.3.1 fix
+#ifndef json_boolean
+#define json_boolean(val)      ((val) ? json_true() : json_false())
+#endif
 
 /* ----------------------- Default directories --------------------- */
 
