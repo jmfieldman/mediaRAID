@@ -13,6 +13,7 @@
 #include <limits.h>
 #include <pthread.h>
 #include <jansson.h>
+#include <dirent.h>
 
 /* -------------------- Defines --------------------------- */
 
@@ -49,7 +50,6 @@ typedef struct {
 	
 	char            concatpath[PATH_MAX];
 	size_t          concatpath_baselen;
-	pthread_mutex_t concatpath_mutex;
 	
 	/* Capacity */
 	
@@ -87,6 +87,11 @@ VolumeState_t volume_state_with_basepath(const char *basepath);
 
 RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath);
 void set_volume_active(RaidVolume_t *volume, int active);
+
+const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
+const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
+
+DIR **volume_active_dir_entries(const char *relative_raid_path);
 
 /* ----------------------- JSON ------------------------------------ */
 

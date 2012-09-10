@@ -77,7 +77,9 @@ static pthread_mutex_t volume_list_mutex  = PTHREAD_MUTEX_INITIALIZER;
        pthread_mutex_t g_volume_api_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void destroy_volume_node(VolumeNode_t *node) {
-	free(node);
+	if (node) {
+		free(node);
+	}
 }
 
 static VolumeNode_t *list_add_volume(VolumeNode_t **list, RaidVolume_t *volume) {
@@ -156,6 +158,14 @@ static RaidVolume_t *list_lookup_volume_by_basepath(VolumeNode_t *list, const ch
 	return NULL;
 }
 
+static int count_volumes_in_list_nonatomic(VolumeNode_t *list) {
+	int count = 0;
+	while (list) {
+		list = list->next;
+		count++;
+	}
+	return count;
+}
 
 /* --------------------- */
 
@@ -234,7 +244,6 @@ RaidVolume_t *create_volume(const char *alias, const char *basepath, const char 
 	/* concat helpers */
 	strncpy(volume->concatpath, volume->raidpath, PATH_MAX-1);
 	volume->concatpath_baselen = strnlen(volume->concatpath, PATH_MAX-1);
-	pthread_mutex_init(&volume->concatpath_mutex, NULL);
 	
 	/* Update byte counters */
 	update_volume_byte_counters(volume);
@@ -299,6 +308,45 @@ VolumeState_t volume_state_with_basepath(const char *basepath) {
 	return VOLUME_DNE;
 }
 
+
+const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *volume_path, char *buffer) {
+	snprintf(buffer, PATH_MAX-1, "%s%s", volume->raidpath, volume_path );
+	return buffer;
+}
+
+const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer) {
+	snprintf(buffer, PATH_MAX-1, "%s%s", volume->trashpath, volume_path );
+	return buffer;
+}
+
+
+DIR **volume_active_dir_entries(const char *relative_raid_path) {
+	pthread_mutex_lock(&volume_list_mutex);
+	int active_volume_count= count_volumes_in_list_nonatomic(active_volumes);
+	if (!active_volume_count) return NULL;
+	
+	DIR **entries = malloc((active_volume_count+1) * sizeof(DIR*));
+	if (!entries) return entries;
+	
+	VolumeNode_t *volume = active_volumes;
+	int cur_entry = 0;
+	while (volume) {
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		DIR *entry = opendir(fullpath);
+		if (entry) {
+			entries[cur_entry] = entry;
+			cur_entry++;
+		}
+		
+		volume = volume->next;
+	}
+	entries[cur_entry] = 0;
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return entries;
+}
 
 /* ----------------------- JSON ------------------------------------ */
 

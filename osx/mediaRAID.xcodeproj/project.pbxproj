@@ -13,6 +13,7 @@
 		3522B21215F922A200351928 /* simplehash.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21115F922A200351928 /* simplehash.c */; };
 		3522B21A15F945D900351928 /* exlog.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21915F945D900351928 /* exlog.c */; };
 		3522B22215F94B7900351928 /* volumes.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22115F94B7900351928 /* volumes.c */; };
+		3522B22A15FEA0E500351928 /* data_structs.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22915FEA0E500351928 /* data_structs.c */; };
 		35AC127E15FA56CA00685B10 /* httpd.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC127D15FA56CA00685B10 /* httpd.c */; };
 		35AC128015FA5D6E00685B10 /* libmicrohttpd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */; };
 		35AC128215FA6ECF00685B10 /* libjansson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC128115FA6ECF00685B10 /* libjansson.a */; };
@@ -43,6 +44,8 @@
 		3522B21915F945D900351928 /* exlog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = exlog.c; sourceTree = "<group>"; };
 		3522B21F15F94B6F00351928 /* volumes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = volumes.h; sourceTree = "<group>"; };
 		3522B22115F94B7900351928 /* volumes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volumes.c; sourceTree = "<group>"; };
+		3522B22715FEA0D500351928 /* data_structs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = data_structs.h; sourceTree = "<group>"; };
+		3522B22915FEA0E500351928 /* data_structs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = data_structs.c; sourceTree = "<group>"; };
 		35AC127B15FA56B500685B10 /* httpd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = httpd.h; sourceTree = "<group>"; };
 		35AC127D15FA56CA00685B10 /* httpd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = httpd.c; sourceTree = "<group>"; };
 		35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmicrohttpd.a; path = ../../../../../usr/local/lib/libmicrohttpd.a; sourceTree = "<group>"; };
@@ -91,6 +94,8 @@
 				3522B20E15F9171E00351928 /* fuse_multiplex.c */,
 				3522B21315F922B000351928 /* simplehash.h */,
 				3522B21115F922A200351928 /* simplehash.c */,
+				3522B22715FEA0D500351928 /* data_structs.h */,
+				3522B22915FEA0E500351928 /* data_structs.c */,
 				3522B21815F945CC00351928 /* exlog.h */,
 				3522B21915F945D900351928 /* exlog.c */,
 				3522B21F15F94B6F00351928 /* volumes.h */,
@@ -159,6 +164,7 @@
 				3522B21A15F945D900351928 /* exlog.c in Sources */,
 				3522B22215F94B7900351928 /* volumes.c in Sources */,
 				35AC127E15FA56CA00685B10 /* httpd.c in Sources */,
+				3522B22A15FEA0E500351928 /* data_structs.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
