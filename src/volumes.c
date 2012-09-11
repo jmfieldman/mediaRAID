@@ -356,27 +356,49 @@ DIR **volume_active_dir_entries(const char *relative_raid_path) {
 	return entries;
 }
 
-int volume_stat_of_any_active_file(const char *relative_raid_path, struct stat *buf) {
+
+int volume_most_recently_modified_instance(const char *relative_raid_path, RaidVolume_t **which_volume, char *fullpath, struct stat *stbuf) {
 	pthread_mutex_lock(&volume_list_mutex);
 	
 	VolumeNode_t *volume = active_volumes;
+	struct stat tmp_stbuf;
+	
+	VolumeNode_t *most_recent_volume = NULL;
+	time_t        most_recent_time   = 0;
+	
 	while (volume) {
-		
+		/* Go through all volumes and find the volume w/ the latest modification date */
 		char fullpath[PATH_MAX];
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
-		
-		int s = stat(fullpath, buf);
+
+		int s = stat(fullpath, &tmp_stbuf);
 		if (s == 0) {
-			pthread_mutex_unlock(&volume_list_mutex);
-			return 0;
+			if (tmp_stbuf.st_mtimespec.tv_sec > most_recent_time) {
+				most_recent_time   = tmp_stbuf.st_mtimespec.tv_sec;
+				most_recent_volume = volume;
+				if (stbuf) {
+					memcpy(stbuf, &tmp_stbuf, sizeof(struct stat));
+				}
+			}
 		}
 		
 		volume = volume->next;
 	}
 	
+	/* No files? return failure */
+	if (most_recent_time == 0) {
+		pthread_mutex_unlock(&volume_list_mutex);
+		return -1;
+	}
+	
+	/* Otherwise, set data */
+	if (which_volume) *which_volume = most_recent_volume->volume;
+	if (fullpath)     volume_full_path_for_raid_path(most_recent_volume->volume, relative_raid_path, fullpath);
+		
 	pthread_mutex_unlock(&volume_list_mutex);
-	return -1;
+	return 0;
 }
+
 
 /* ----------------------- JSON ------------------------------------ */
 

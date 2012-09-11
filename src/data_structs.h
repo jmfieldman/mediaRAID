@@ -33,8 +33,10 @@ typedef struct {
 Dictionary_t *dictionary_create_with_size(int buckets);
 void dictionary_set_int(Dictionary_t *dic, const char *key, int64_t value);
 void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val);
+void dictionary_set_int_str(Dictionary_t *dic, const char *key, int64_t int_value, const char *str_val);
 int dictionary_get_int(Dictionary_t *dic, const char *key, int64_t *value);
-const char *dictionary_get_str(Dictionary_t *dic, const char *key);
+int dictionary_get_str(Dictionary_t *dic, const char *key, char *value);
+int dictionary_get_int_str(Dictionary_t *dic, const char *key, int64_t *int_value, char *str_value);
 void dictionary_remove_item(Dictionary_t *dic, const char *key);
 void dictionary_destroy(Dictionary_t *dic);
 

@@ -110,9 +110,12 @@ void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val) {
 	struct dic_node *np = __get_dictionary_node_with_key(dic, key);
 	if (np) {
 		if (np->str_value) free(np->str_value);
-		size_t len = strlen(val);
-		np->str_value = malloc(len+1);
-		memcpy(np->str_value, val, len);
+		np->str_value = NULL;
+		if (val) {
+			size_t len = strlen(val);
+			np->str_value = malloc(len+1);
+			memcpy(np->str_value, val, len);
+		}		
 		pthread_mutex_unlock(&dic->mutex);
 		return;
 	}
@@ -123,9 +126,47 @@ void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val) {
 		return;
 	}
 	
-	size_t len = strlen(val);
-	np->str_value = malloc(len+1);
-	memcpy(np->str_value, val, len);
+	if (val) {
+		size_t len = strlen(val);
+		np->str_value = malloc(len+1);
+		memcpy(np->str_value, val, len);
+	}
+	
+	unsigned int hashval = hash_str(key, dic->bucket_count);
+	np->next = dic->buckets[hashval];
+	dic->buckets[hashval] = np;
+	pthread_mutex_unlock(&dic->mutex);
+}
+
+void dictionary_set_int_str(Dictionary_t *dic, const char *key, int64_t int_value, const char *str_val) {
+	pthread_mutex_lock(&dic->mutex);
+	struct dic_node *np = __get_dictionary_node_with_key(dic, key);
+	if (np) {
+		np->int_value = int_value;
+		if (np->str_value) free(np->str_value);
+		np->str_value = NULL;
+		if (str_val) {
+			size_t len = strlen(str_val);
+			np->str_value = malloc(len+1);
+			memcpy(np->str_value, str_val, len);
+		}
+		pthread_mutex_unlock(&dic->mutex);
+		return;
+	}
+	
+	np = __new_dic_node(key);
+	if (!np) {
+		pthread_mutex_unlock(&dic->mutex);
+		return;
+	}
+	
+	np->int_value = int_value;
+	
+	if (str_val) {
+		size_t len = strlen(str_val);
+		np->str_value = malloc(len+1);
+		memcpy(np->str_value, str_val, len);
+	}
 	
 	unsigned int hashval = hash_str(key, dic->bucket_count);
 	np->next = dic->buckets[hashval];
@@ -148,21 +189,56 @@ int dictionary_get_int(Dictionary_t *dic, const char *key, int64_t *value) {
 	return 0; /* not found */
 }
 
-const char *dictionary_get_str(Dictionary_t *dic, const char *key) {
+int dictionary_get_str(Dictionary_t *dic, const char *key, char *value) {
 	pthread_mutex_lock(&dic->mutex);
 	struct dic_node *np;
 	for (np = dic->buckets[hash_str(key, dic->bucket_count)]; np != NULL; np = np->next) {
 		if (strcmp(key, np->key) == 0) {
+			if (value) strcpy(value, np->str_value);
 			pthread_mutex_unlock(&dic->mutex);
-			return np->str_value; /* found */
+			return 1; /* found */
 		}
 	}
 	pthread_mutex_unlock(&dic->mutex);
-	return NULL; /* not found */
+	return 0; /* not found */
+}
+
+int dictionary_get_int_str(Dictionary_t *dic, const char *key, int64_t *int_value, char *str_value) {
+	pthread_mutex_lock(&dic->mutex);
+	struct dic_node *np;
+	for (np = dic->buckets[hash_str(key, dic->bucket_count)]; np != NULL; np = np->next) {
+		if (strcmp(key, np->key) == 0) {
+			*int_value = np->int_value;
+			if (str_value) strcpy(str_value, np->str_value);
+			pthread_mutex_unlock(&dic->mutex);
+			return 1; /* found */
+		}
+	}
+	pthread_mutex_unlock(&dic->mutex);
+	return 0; /* not found */
 }
 
 void dictionary_remove_item(Dictionary_t *dic, const char *key) {
+	unsigned int hashval = hash_str(key, dic->bucket_count);
+	struct dic_node *np = dic->buckets[hashval];
 	
+	if (np == NULL) return;
+	
+	if (!strcmp(np->key, key)) {
+		dic->buckets[hashval] = np->next;
+		__destroy_dic_node(np);
+		return;
+	}
+	
+	while (np->next) {
+		if (!strcmp(np->next->key, key)) {
+			struct dic_node *t = np->next;
+			np->next = np->next->next;
+			__destroy_dic_node(t);
+			return;
+		}
+		np = np->next;
+	}
 }
 
 void dictionary_destroy(Dictionary_t *dic) {

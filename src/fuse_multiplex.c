@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include "fuse_multiplex.h"
 #include "mediaRAID.h"
@@ -16,6 +17,7 @@
 #include "volumes.h"
 #include "httpd.h"
 #include "data_structs.h"
+#include "files.h"
 
 
 struct fuse_operations fuse_oper_struct = {
@@ -24,7 +26,8 @@ struct fuse_operations fuse_oper_struct = {
 	.readdir   = multiplex_readdir,
 	.open      = multiplex_open,
 	.read      = multiplex_read,
-	
+	.write     = multiplex_write,
+	.release   = multiplex_release,
 };
 
 
@@ -44,10 +47,22 @@ void *multiplex_init(struct fuse_conn_info *conn) {
 int multiplex_getattr(const char *path, struct stat *stbuf) {
 	memset(stbuf, 0, sizeof(struct stat));
 	
-	/* We have a helper function that pulls the stat struct from the first file in the active volume list */
-	return volume_stat_of_any_active_file(path, stbuf);
-		 
-	return 0;
+	EXLog(FUSE, INFO, "multiplex_getattr [%s]", path);
+	
+	/* Check if the file is open, if so, it's the active file */
+	char tmppath[PATH_MAX];
+	int64_t fh;
+	if (get_open_fh_for_path(path, &fh, tmppath)) {
+		/* We should return the stat for the active file */
+		RaidVolume_t *active_volume = volume_with_basepath(tmppath);
+		volume_full_path_for_raid_path(active_volume, path, tmppath);
+		if (!stat(tmppath, stbuf)) {
+			return 0;
+		}
+	}
+	
+	/* If file is closed, we have a helper function that pulls the stat struct from the most recently modified file in the active volume list */
+	return volume_most_recently_modified_instance(path, NULL, NULL, stbuf);
 }
 
 int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -96,11 +111,73 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 int multiplex_open(const char *path, struct fuse_file_info *fi) {
 	
+	EXLog(FUSE, DBG, "multiplex_open [%s]", path);
+	
+	/* If already open, return the existing */
+	int64_t fh;
+	if (get_open_fh_for_path(path, &fh, NULL)) {
+		fi->fh = fh;
+		return 0;
+	}
+	
+	/* Otherwise get the most recently modified version */
+	char fullpath[PATH_MAX];
+	RaidVolume_t *volume;
+	if (volume_most_recently_modified_instance(path, &volume, fullpath, NULL)) {
+		/* No file found! */
+		return -ENOENT;
+	}
+	
+	/* We have the full filepath */
+	fh = open(fullpath, fi->flags);
+	fi->fh = fh;
+	
+	if (fh >= 0) {
+		/* Open was successful, let's put it in the hash */
+		set_open_fh_for_path(path, fh, volume->basepath);
+	}
+	
 	return 0;
 }
 
-int multiplex_read(const char *path, char *buf, size_t size, off_t offset,
-				   struct fuse_file_info *fi) {
-	return 0;
+int multiplex_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	
+	EXLog(FUSE, DBG, "multiplex_read [%s | %d]", path, (int)size);
+	
+	/* Assume fh is valid in fi */
+	if (lseek((int)fi->fh, offset, SEEK_SET) < 0) {
+		close((int)fi->fh);
+		set_open_fh_for_path(path, -1, NULL);
+		return -1;
+	}
+	
+	/* Otherwise read */
+	return (int)read((int)fi->fh, buf, size);
 }
+
+int multiplex_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	
+	EXLog(FUSE, DBG, "multiplex_write [%s | %d]", path, (int)size);
+	
+	/* Assume fh is valid in fi */
+	if (lseek((int)fi->fh, offset, SEEK_SET) < 0) {
+		close((int)fi->fh);
+		set_open_fh_for_path(path, -1, NULL);
+		return -1;
+	}
+	
+	/* Otherwise read */
+	return (int)write((int)fi->fh, buf, size);
+}
+
+int multiplex_release(const char *path, struct fuse_file_info *fi) {
+	
+	EXLog(FUSE, DBG, "multiplex_release [%s]", path);
+	
+	/* Close file handle and remove from dictionary */
+	set_open_fh_for_path(path, -1, NULL);
+	return close((int)fi->fh);
+}
+
+
 
