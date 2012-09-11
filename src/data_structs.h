@@ -10,7 +10,7 @@
 #define mediaRAID_data_structs_h
 
 #include <stdint.h>
-
+#include <pthread.h>
 
 /* dictionary */
 
@@ -26,6 +26,7 @@ typedef struct {
 	
 	struct dic_node **buckets;
 	int               bucket_count;
+	pthread_mutex_t   mutex;
 	
 } Dictionary_t;
 

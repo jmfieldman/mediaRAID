@@ -39,6 +39,7 @@ Dictionary_t *dictionary_create_with_size(int buckets) {
 	if (!dic->buckets) return NULL;
 	memset(dic->buckets, 0, buckets * sizeof(struct dic_node *));
 	dic->bucket_count = buckets;
+	pthread_mutex_init(&dic->mutex, NULL);
 	return dic;
 }
 
@@ -81,14 +82,19 @@ static struct dic_node *__get_dictionary_node_with_key(Dictionary_t *dic, const 
 
 
 void dictionary_set_int(Dictionary_t *dic, const char *key, int64_t value) {
+	pthread_mutex_lock(&dic->mutex);
 	struct dic_node *np = __get_dictionary_node_with_key(dic, key);
 	if (np) {
 		np->int_value = value;
+		pthread_mutex_unlock(&dic->mutex);
 		return;
 	}
 	
 	np = __new_dic_node(key);
-	if (!np) return;
+	if (!np) {
+		pthread_mutex_unlock(&dic->mutex);
+		return;
+	}
 	
 	np->int_value = value;
 	
@@ -96,20 +102,26 @@ void dictionary_set_int(Dictionary_t *dic, const char *key, int64_t value) {
 	np->next = dic->buckets[hashval];
 	dic->buckets[hashval] = np;
 	
+	pthread_mutex_unlock(&dic->mutex);
 }
 
 void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val) {
+	pthread_mutex_lock(&dic->mutex);
 	struct dic_node *np = __get_dictionary_node_with_key(dic, key);
 	if (np) {
 		if (np->str_value) free(np->str_value);
 		size_t len = strlen(val);
 		np->str_value = malloc(len+1);
 		memcpy(np->str_value, val, len);
+		pthread_mutex_unlock(&dic->mutex);
 		return;
 	}
 	
 	np = __new_dic_node(key);
-	if (!np) return;
+	if (!np) {
+		pthread_mutex_unlock(&dic->mutex);
+		return;
+	}
 	
 	size_t len = strlen(val);
 	np->str_value = malloc(len+1);
@@ -118,27 +130,34 @@ void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val) {
 	unsigned int hashval = hash_str(key, dic->bucket_count);
 	np->next = dic->buckets[hashval];
 	dic->buckets[hashval] = np;
+	pthread_mutex_unlock(&dic->mutex);
 }
 
 
 int dictionary_get_int(Dictionary_t *dic, const char *key, int64_t *value) {
+	pthread_mutex_lock(&dic->mutex);
 	struct dic_node *np;
 	for (np = dic->buckets[hash_str(key, dic->bucket_count)]; np != NULL; np = np->next) {
 		if (strcmp(key, np->key) == 0) {
 			*value = np->int_value;
+			pthread_mutex_unlock(&dic->mutex);
 			return 1; /* found */
 		}
 	}
+	pthread_mutex_unlock(&dic->mutex);
 	return 0; /* not found */
 }
 
 const char *dictionary_get_str(Dictionary_t *dic, const char *key) {
+	pthread_mutex_lock(&dic->mutex);
 	struct dic_node *np;
 	for (np = dic->buckets[hash_str(key, dic->bucket_count)]; np != NULL; np = np->next) {
 		if (strcmp(key, np->key) == 0) {
+			pthread_mutex_unlock(&dic->mutex);
 			return np->str_value; /* found */
 		}
 	}
+	pthread_mutex_unlock(&dic->mutex);
 	return NULL; /* not found */
 }
 
