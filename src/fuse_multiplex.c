@@ -28,6 +28,7 @@ struct fuse_operations fuse_oper_struct = {
 	.read      = multiplex_read,
 	.write     = multiplex_write,
 	.release   = multiplex_release,
+	.unlink    = multiplex_unlink,
 };
 
 
@@ -177,6 +178,11 @@ int multiplex_release(const char *path, struct fuse_file_info *fi) {
 	/* Close file handle and remove from dictionary */
 	set_open_fh_for_path(path, -1, NULL);
 	return close((int)fi->fh);
+}
+
+int multiplex_unlink(const char *path) {
+	/* We have a helper for this */
+	return volume_unlink_path_from_active_volumes(path);
 }
 
 

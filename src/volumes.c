@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/statvfs.h>
 #include <dirent.h>
+#include <unistd.h>
 #include "volumes.h"
 #include "exlog.h"
 
@@ -399,6 +400,25 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	return 0;
 }
 
+int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		/* Go through all volumes and find the volume w/ the latest modification date */
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+	
+		int ret = unlink(fullpath);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
 
 /* ----------------------- JSON ------------------------------------ */
 
