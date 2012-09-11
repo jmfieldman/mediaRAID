@@ -44,22 +44,9 @@ void *multiplex_init(struct fuse_conn_info *conn) {
 int multiplex_getattr(const char *path, struct stat *stbuf) {
 	memset(stbuf, 0, sizeof(struct stat));
 	
+	/* We have a helper function that pulls the stat struct from the first file in the active volume list */
 	return volume_stat_of_any_active_file(path, stbuf);
-	
-	/*
-	
-	if(strcmp(path, "/") == 0) {
-        stbuf->st_mode = S_IFDIR | 0755;
-        stbuf->st_nlink = 2;
-		return 0;
-    }
-	
-	stbuf->st_mode = S_IFREG | 0444;
-	stbuf->st_nlink = 1;
-	stbuf->st_size = 1;
-	
-	 */
-	 
+		 
 	return 0;
 }
 
@@ -68,20 +55,25 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	
 	EXLog(FUSE, INFO, "multiplex_readdir [%s]", path);
 
+	/* Fill out basic dot dirs */
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	
+
+	/* Get all the DIR entries for the active volumes */
 	DIR **entries = volume_active_dir_entries(path);
 	DIR **entries_start = entries;
 	if (entries) {
+		/* create a hash table that will help detect duplicate entries */
 		Dictionary_t *dic = dictionary_create_with_size(512);
 		int64_t tmp;
 		while (*entries) {
+			/* For each DIR, iterate through and grab entries */
 			DIR *entry = *entries;
 			struct dirent *dent = readdir(entry);
 			while (dent) {
 				
 				if (strcmp("..", dent->d_name) && strcmp(".", dent->d_name)) {
+					/* For each entry, add it to the list if it doesn't exist in the hash table */
 					if (!dictionary_get_int(dic, dent->d_name, &tmp)) {
 						dictionary_set_int(dic, dent->d_name, tmp);
 						EXLog(FUSE, DBG, "Adding dir entry [%s]", dent->d_name);
@@ -91,14 +83,13 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 				
 				dent = readdir(entry);
 			}
-			closedir(entry);
+			closedir(entry); /* Don't forget to close the DIR after use! */
 			entries++;
 		}
+		/* Free memory */
 		dictionary_destroy(dic);
 		free(entries_start);
 	}
-	
-	EXLog(FUSE, INFO, "multiplex_readdir done [%s]", path);
 	
 	return 0;
 }
