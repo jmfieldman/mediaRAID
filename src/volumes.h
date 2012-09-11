@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <limits.h>
+#include <sys/stat.h>
 #include <pthread.h>
 #include <jansson.h>
 #include <dirent.h>
@@ -92,6 +93,8 @@ const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *vol
 const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
 
 DIR **volume_active_dir_entries(const char *relative_raid_path);
+
+int volume_stat_of_any_active_file(const char *relative_raid_path, struct stat *buf);
 
 /* ----------------------- JSON ------------------------------------ */
 

@@ -43,10 +43,23 @@ void *multiplex_init(struct fuse_conn_info *conn) {
 
 int multiplex_getattr(const char *path, struct stat *stbuf) {
 	memset(stbuf, 0, sizeof(struct stat));
-	stbuf->st_mode = S_IFREG | 0444;
-	stbuf->st_nlink = rand();
-	stbuf->st_size = rand();
 	
+	return volume_stat_of_any_active_file(path, stbuf);
+	
+	/*
+	
+	if(strcmp(path, "/") == 0) {
+        stbuf->st_mode = S_IFDIR | 0755;
+        stbuf->st_nlink = 2;
+		return 0;
+    }
+	
+	stbuf->st_mode = S_IFREG | 0444;
+	stbuf->st_nlink = 1;
+	stbuf->st_size = 1;
+	
+	 */
+	 
 	return 0;
 }
 
@@ -54,8 +67,12 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 					  off_t offset, struct fuse_file_info *fi) {
 	
 	EXLog(FUSE, INFO, "multiplex_readdir [%s]", path);
+
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0);
 	
 	DIR **entries = volume_active_dir_entries(path);
+	DIR **entries_start = entries;
 	if (entries) {
 		Dictionary_t *dic = dictionary_create_with_size(512);
 		int64_t tmp;
@@ -64,25 +81,24 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			struct dirent *dent = readdir(entry);
 			while (dent) {
 				
-				if (strcmp("..", dent->d_name)) {
+				if (strcmp("..", dent->d_name) && strcmp(".", dent->d_name)) {
 					if (!dictionary_get_int(dic, dent->d_name, &tmp)) {
 						dictionary_set_int(dic, dent->d_name, tmp);
+						EXLog(FUSE, DBG, "Adding dir entry [%s]", dent->d_name);
 						filler(buf, dent->d_name, NULL, 0);
 					}
 				}
 				
 				dent = readdir(entry);
 			}
+			closedir(entry);
 			entries++;
 		}
 		dictionary_destroy(dic);
-		free(entries);
+		free(entries_start);
 	}
 	
-	if (strncmp("..", path, 3)) {
-		filler(buf, "..", NULL, 0);
-	}
-	
+	EXLog(FUSE, INFO, "multiplex_readdir done [%s]", path);
 	
 	return 0;
 }

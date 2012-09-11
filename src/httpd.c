@@ -128,6 +128,8 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
 		return;
 	}
 	
+	EXLog(COMM, INFO, "add request successful");
+	
 	/* Add volume to list */
 	set_volume_active(volume, 1);
 	
@@ -160,7 +162,7 @@ int httpd_access_handler (void *cls,
 						  void **con_cls) {
 	
 	EXLog(COMM, INFO, "httpd_access_handler [%s:%s]", method, url);
-	
+
 	/*
 	
 	if (*upload_data_size) {
@@ -178,7 +180,7 @@ int httpd_access_handler (void *cls,
 	 
 	 */
 
-	#define URL_MATCHES( _u ) !strncasecmp( url, _u , strlen( _u ))
+	#define URL_MATCHES( _u ) !strncasecmp( url, _u , strlen( _u ) + 1)
 	
 	if (URL_MATCHES( "/volume/add" )) {
 		handle_volume_add_request(connection);

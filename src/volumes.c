@@ -15,6 +15,7 @@
 #include <sys/statvfs.h>
 #include <dirent.h>
 #include "volumes.h"
+#include "exlog.h"
 
 // Jannson 2.3.1 fix
 #ifndef json_boolean
@@ -323,10 +324,16 @@ const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *vo
 DIR **volume_active_dir_entries(const char *relative_raid_path) {
 	pthread_mutex_lock(&volume_list_mutex);
 	int active_volume_count= count_volumes_in_list_nonatomic(active_volumes);
-	if (!active_volume_count) return NULL;
+	if (!active_volume_count) {
+		pthread_mutex_unlock(&volume_list_mutex);
+		return NULL;
+	}
 	
-	DIR **entries = malloc((active_volume_count+1) * sizeof(DIR*));
-	if (!entries) return entries;
+	DIR **entries = (DIR**)malloc((active_volume_count+2) * sizeof(DIR*));
+	if (!entries) {
+		pthread_mutex_unlock(&volume_list_mutex);
+		return entries;
+	}
 	
 	VolumeNode_t *volume = active_volumes;
 	int cur_entry = 0;
@@ -337,6 +344,7 @@ DIR **volume_active_dir_entries(const char *relative_raid_path) {
 		DIR *entry = opendir(fullpath);
 		if (entry) {
 			entries[cur_entry] = entry;
+			//EXLog(VOLUME, DBG, "Got entry for [%s]", fullpath);
 			cur_entry++;
 		}
 		
@@ -346,6 +354,28 @@ DIR **volume_active_dir_entries(const char *relative_raid_path) {
 	
 	pthread_mutex_unlock(&volume_list_mutex);
 	return entries;
+}
+
+int volume_stat_of_any_active_file(const char *relative_raid_path, struct stat *buf) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int s = stat(fullpath, buf);
+		if (s == 0) {
+			pthread_mutex_unlock(&volume_list_mutex);
+			return 0;
+		}
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return -1;
 }
 
 /* ----------------------- JSON ------------------------------------ */
