@@ -98,6 +98,10 @@ DIR **volume_active_dir_entries(const char *relative_raid_path);
 int volume_most_recently_modified_instance(const char *relative_raid_path, RaidVolume_t **which_volume, char *fullpath, struct stat *stbuf);
 
 int volume_unlink_path_from_active_volumes(const char *relative_raid_path);
+int volume_rmdir_path_from_active_volumes(const char *relative_raid_path);
+int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
+
+RaidVolume_t *volume_with_most_bytes_free();
 
 /* ----------------------- JSON ------------------------------------ */
 

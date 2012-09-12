@@ -24,11 +24,15 @@ struct fuse_operations fuse_oper_struct = {
 	.init      = multiplex_init,
 	.getattr   = multiplex_getattr,
 	.readdir   = multiplex_readdir,
+	.mknod     = multiplex_mknod,
 	.open      = multiplex_open,
 	.read      = multiplex_read,
 	.write     = multiplex_write,
 	.release   = multiplex_release,
 	.unlink    = multiplex_unlink,
+	.rmdir     = multiplex_rmdir,
+	.mkdir     = multiplex_mkdir,
+	.truncate  = multiplex_truncate,
 };
 
 
@@ -110,6 +114,24 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	return 0;
 }
 
+int multiplex_mknod(const char *path, mode_t mode, dev_t dev) {
+	
+	/* Check if the file exists */
+	if (!volume_most_recently_modified_instance(path, NULL, NULL, NULL)) {
+		return -EEXIST;
+	}
+	
+	/* Get the volume with the most free space */
+	RaidVolume_t *volume = volume_with_most_bytes_free();
+	if (!volume) {
+		return -ENOENT;
+	}
+	
+	char fullpath[PATH_MAX];
+	volume_full_path_for_raid_path(volume, path, fullpath);
+	return mknod(fullpath, mode, dev);	
+}
+
 int multiplex_open(const char *path, struct fuse_file_info *fi) {
 	
 	EXLog(FUSE, DBG, "multiplex_open [%s]", path);
@@ -181,9 +203,49 @@ int multiplex_release(const char *path, struct fuse_file_info *fi) {
 }
 
 int multiplex_unlink(const char *path) {
+	
+	EXLog(FUSE, DBG, "multiplex_unlink [%s]", path);
+	
 	/* We have a helper for this */
 	return volume_unlink_path_from_active_volumes(path);
 }
 
+int multiplex_rmdir(const char *path) {
+	
+	EXLog(FUSE, DBG, "multiplex_rmdir [%s]", path);
+	
+	/* We have a helper for this */
+	return volume_rmdir_path_from_active_volumes(path);
+}
 
+int multiplex_mkdir(const char *path, mode_t mode) {
+	
+	EXLog(FUSE, DBG, "multiplex_mkdir [%s]", path);
+	
+	/* We have a helper for this */
+	return volume_mkdir_path_on_active_volumes(path, mode);
+}
+
+int multiplex_truncate(const char *path, off_t length) {
+	/* If already open, attempt to truncate the existing */
+	int64_t fh;
+	char basepath[PATH_MAX];
+	char fullpath[PATH_MAX];
+	if (get_open_fh_for_path(path, &fh, basepath)) {
+		if (!ftruncate((int)fh, length)) {
+			return 0;
+		}
+		
+		/* File open for reading?  Regardless, it's open on a filesystem so let's try to truncate that one */
+		RaidVolume_t *volume = volume_with_basepath(basepath);
+		if (!volume) return -1;
+				
+		volume_full_path_for_raid_path(volume, path, fullpath);
+		return truncate(fullpath, length);
+	}
+	
+	/* Otherwise manually truncate it from whichever was modified last */
+	volume_most_recently_modified_instance(path, NULL, fullpath, NULL);
+	return truncate(fullpath, length);
+}
 

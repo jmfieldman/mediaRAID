@@ -365,7 +365,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	struct stat tmp_stbuf;
 	
 	VolumeNode_t *most_recent_volume = NULL;
-	time_t        most_recent_time   = 0;
+	time_t        most_recent_time   = -1;
 	
 	while (volume) {
 		/* Go through all volumes and find the volume w/ the latest modification date */
@@ -387,7 +387,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	}
 	
 	/* No files? return failure */
-	if (most_recent_time == 0) {
+	if (most_recent_time == -1) {
 		pthread_mutex_unlock(&volume_list_mutex);
 		return -1;
 	}
@@ -406,7 +406,7 @@ int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
 	VolumeNode_t *volume = active_volumes;
 	int master_ret = -1;
 	while (volume) {
-		/* Go through all volumes and find the volume w/ the latest modification date */
+
 		char fullpath[PATH_MAX];
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
 	
@@ -419,6 +419,72 @@ int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
 	pthread_mutex_unlock(&volume_list_mutex);
 	return master_ret;
 }
+
+int volume_rmdir_path_from_active_volumes(const char *relative_raid_path) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = rmdir(fullpath);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t mode) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = mkdir(fullpath, mode);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+
+RaidVolume_t *volume_with_most_bytes_free() {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	RaidVolume_t *response = NULL;
+	
+	while (volume) {
+		
+		update_volume_byte_counters(volume->volume);
+		if (!response) {
+			response = volume->volume;
+		} else {
+			if (response->capacity_free < volume->volume->capacity_free) {
+				response = volume->volume;
+			}
+		}
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return response;
+}
+
 
 /* ----------------------- JSON ------------------------------------ */
 
