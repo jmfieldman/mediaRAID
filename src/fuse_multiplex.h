@@ -28,6 +28,8 @@ int multiplex_unlink(const char *path);
 int multiplex_rmdir(const char *path);
 int multiplex_mkdir(const char *path, mode_t mode);
 int multiplex_truncate(const char *path, off_t length);
+int multiplex_chmod(const char *path, mode_t mode);
+int multiplex_chown(const char *path, uid_t uid, gid_t gid);
 
 
 #endif

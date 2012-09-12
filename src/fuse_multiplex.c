@@ -33,6 +33,8 @@ struct fuse_operations fuse_oper_struct = {
 	.unlink    = multiplex_unlink,
 	.rmdir     = multiplex_rmdir,
 	.mkdir     = multiplex_mkdir,
+	.chmod     = multiplex_chmod,
+	.chown     = multiplex_chown,
 	.truncate  = multiplex_truncate,
 };
 
@@ -255,6 +257,22 @@ int multiplex_mkdir(const char *path, mode_t mode) {
 	
 	/* We have a helper for this */
 	return volume_mkdir_path_on_active_volumes(path, mode);
+}
+
+int multiplex_chmod(const char *path, mode_t mode) {
+
+	EXLog(FUSE, DBG, "multiplex_chmod [%s]", path);
+	
+	/* We have a helper for this */
+	return volume_chmod_path_on_active_volumes(path, mode);
+}
+
+int multiplex_chown(const char *path, uid_t uid, gid_t gid) {
+
+	EXLog(FUSE, DBG, "multiplex_chown [%s]", path);
+	
+	/* We have a helper for this */
+	return volume_chown_path_on_active_volumes(path, uid, gid);
 }
 
 int multiplex_truncate(const char *path, off_t length) {

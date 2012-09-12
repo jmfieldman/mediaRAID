@@ -464,6 +464,47 @@ int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t m
 	return master_ret;
 }
 
+int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t uid, gid_t gid) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = chown(fullpath, uid, gid);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t mode) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = chmod(fullpath, mode);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+
 
 RaidVolume_t *volume_with_most_bytes_free() {
 	pthread_mutex_lock(&volume_list_mutex);

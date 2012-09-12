@@ -100,6 +100,8 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 int volume_unlink_path_from_active_volumes(const char *relative_raid_path);
 int volume_rmdir_path_from_active_volumes(const char *relative_raid_path);
 int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
+int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t uid, gid_t gid);
+int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
 
 RaidVolume_t *volume_with_most_bytes_free();
 
