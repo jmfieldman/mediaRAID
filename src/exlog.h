@@ -21,6 +21,7 @@ typedef enum EXDebugComponent {
 	EXDBGCOMP_FUSE                       = 0x00000001,
 	EXDBGCOMP_COMM                       = 0x00000002,
 	EXDBGCOMP_VOLUME                     = 0x00000004,
+	EXDBGCOMP_REPL                       = 0x00000008,
 	
 	/* Performance */
 	EXDBGCOMP_PERFORM                    = 0x40000000,
@@ -33,6 +34,7 @@ typedef enum EXDebugComponent {
 #define EXDBGCOMP_STR_FUSE               "FUSE"
 #define EXDBGCOMP_STR_COMM               "COMM"
 #define EXDBGCOMP_STR_VOLUME             "VOLUME"
+#define EXDBGCOMP_STR_REPL               "REPL"
 
 #define EXDBGCOMP_STR_PERFORM            "PERFORM"
 #define EXDBGCOMP_STR_ANY                "ANY"

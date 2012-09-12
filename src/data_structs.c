@@ -248,3 +248,107 @@ void dictionary_destroy(Dictionary_t *dic) {
 	}
 	free(dic);
 }
+
+
+
+
+/* ------------------------------------- Linked List ------------------------------------ */
+
+LinkedList_t *linked_list_create() {
+	LinkedList_t *list = (LinkedList_t*)malloc(sizeof(LinkedList_t));
+	if (!list) return list;
+	
+	list->front = NULL;
+	list->back  = NULL;
+	pthread_mutex_init(&list->mutex, NULL);
+	
+	return list;
+}
+
+void __list_node_destroy(struct list_node *node) {
+	if (!node) return;
+	__list_node_destroy(node->next);
+	if (node->data) free(node->data);
+}
+
+void linked_list_destroy(LinkedList_t *list) {
+	if (!list) return;
+	pthread_mutex_lock(&list->mutex);
+	__list_node_destroy(list->front);
+	list->front = NULL;
+	list->back = NULL;
+	pthread_mutex_unlock(&list->mutex);
+	free(list);
+	
+}
+
+void linked_list_push(LinkedList_t *list, int front, void *data) {
+	if (!list) return;
+	
+	struct list_node *node = (struct list_node*)malloc(sizeof(struct list_node));
+	if (!node) return;
+	
+	pthread_mutex_lock(&list->mutex);
+	
+	node->next = NULL;
+	node->data = data;
+	
+	if (front || !list->front) {
+		node->next = list->front;
+		list->front = node;
+		if (!list->back) list->back = node;
+	} else {
+		list->back->next = node;
+		list->back = node;
+	}
+	
+	pthread_mutex_unlock(&list->mutex);
+}
+
+void *linked_list_pop_front(LinkedList_t *list) {
+	if (!list) return NULL;
+	
+	void *response_data = NULL;
+	
+	pthread_mutex_lock(&list->mutex);
+	
+	if (!list->front) {
+		pthread_mutex_unlock(&list->mutex);
+		return NULL;
+	}
+	
+	response_data = list->front->data;
+	struct list_node *old_front = list->front;
+	if (list->back == list->front) {
+		list->back = NULL;
+	}
+	list->front = list->front->next;
+	free(old_front);
+	
+	pthread_mutex_unlock(&list->mutex);
+	return response_data;
+}
+
+
+void *linked_list_peek(LinkedList_t *list, int front) {
+	if (!list) return NULL;
+	
+	void *response_data = NULL;
+	pthread_mutex_lock(&list->mutex);
+	
+	if (!list->front) {
+		pthread_mutex_unlock(&list->mutex);
+		return NULL;
+	}
+	
+	if (front) {
+		response_data = list->front->data;
+	} else {
+		response_data = list->back->data;
+	}
+	
+	pthread_mutex_unlock(&list->mutex);
+	return response_data;
+}
+
+

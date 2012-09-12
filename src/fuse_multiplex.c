@@ -18,7 +18,7 @@
 #include "httpd.h"
 #include "data_structs.h"
 #include "files.h"
-
+#include "replication.h"
 
 struct fuse_operations fuse_oper_struct = {
 	.init      = multiplex_init,
@@ -46,6 +46,9 @@ void *multiplex_init(struct fuse_conn_info *conn) {
 	
 	/* Initialize httpd daemon */
 	start_httpd_daemon(g_application_options.server_port);
+	
+	/* Initialize replication thread */
+	replication_start();
 	
 	EXLog(FUSE, INFO, "multiplex_init finished");
 	

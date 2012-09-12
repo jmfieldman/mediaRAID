@@ -18,6 +18,7 @@
 		35AC128015FA5D6E00685B10 /* libmicrohttpd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */; };
 		35AC128215FA6ECF00685B10 /* libjansson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC128115FA6ECF00685B10 /* libjansson.a */; };
 		35AC12A315FFBDE000685B10 /* files.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC12A215FFBDE000685B10 /* files.c */; };
+		35AC12A61601252A00685B10 /* replication.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC12A51601252900685B10 /* replication.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -53,6 +54,8 @@
 		35AC128115FA6ECF00685B10 /* libjansson.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjansson.a; path = ../../../../../usr/local/lib/libjansson.a; sourceTree = "<group>"; };
 		35AC12A015FFBDD800685B10 /* files.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = files.h; sourceTree = "<group>"; };
 		35AC12A215FFBDE000685B10 /* files.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = files.c; sourceTree = "<group>"; };
+		35AC12A41601252100685B10 /* replication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = replication.h; sourceTree = "<group>"; };
+		35AC12A51601252900685B10 /* replication.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = replication.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +98,8 @@
 				3522B1C315F904E000351928 /* mediaRAID.c */,
 				3522B21015F9173000351928 /* fuse_multiplex.h */,
 				3522B20E15F9171E00351928 /* fuse_multiplex.c */,
+				35AC12A41601252100685B10 /* replication.h */,
+				35AC12A51601252900685B10 /* replication.c */,
 				3522B21315F922B000351928 /* simplehash.h */,
 				3522B21115F922A200351928 /* simplehash.c */,
 				3522B22715FEA0D500351928 /* data_structs.h */,
@@ -171,6 +176,7 @@
 				35AC127E15FA56CA00685B10 /* httpd.c in Sources */,
 				3522B22A15FEA0E500351928 /* data_structs.c in Sources */,
 				35AC12A315FFBDE000685B10 /* files.c in Sources */,
+				35AC12A61601252A00685B10 /* replication.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

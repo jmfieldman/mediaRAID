@@ -40,4 +40,27 @@ int dictionary_get_int_str(Dictionary_t *dic, const char *key, int64_t *int_valu
 void dictionary_remove_item(Dictionary_t *dic, const char *key);
 void dictionary_destroy(Dictionary_t *dic);
 
+
+/* Linked List */
+
+struct list_node {
+	struct list_node  *next;
+	void              *data;
+};
+
+typedef struct {
+	
+	struct list_node  *front;
+	struct list_node  *back;
+	pthread_mutex_t    mutex;
+	
+} LinkedList_t;
+
+LinkedList_t *linked_list_create();
+void linked_list_destroy(LinkedList_t *list);
+void linked_list_push(LinkedList_t *list, int front, void *data);
+void *linked_list_pop_front(LinkedList_t *list); /* caller must free() response void* */
+void *linked_list_peek(LinkedList_t *list, int front); /* caller must NOT free() response */
+
+
 #endif
