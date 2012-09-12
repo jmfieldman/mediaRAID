@@ -47,6 +47,9 @@ typedef struct {
 	/* The root path to the trash files (typically base + directory) */
 	char trashpath[PATH_MAX];
 	
+	/* The root path to the work files (typically base + directory) */
+	char workpath[PATH_MAX];
+	
 	/* raidpath concatination accelerators */
 	
 	char            concatpath[PATH_MAX];
@@ -77,6 +80,7 @@ static inline void volume_api_unlock() { pthread_mutex_unlock(&g_volume_api_mute
 
 void set_default_raiddir(char *raiddir);
 void set_default_trashdir(char *trashdir);
+void set_default_workdir(char *workdir);
 
 /* ----------------------- Volume tools ---------------------------- */
 
@@ -86,12 +90,13 @@ RaidVolume_t *volume_with_name(const char *basepath, const char *alias);
 VolumeState_t volume_state_with_alias(const char *alias);
 VolumeState_t volume_state_with_basepath(const char *basepath);
 
-RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath);
+RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath, const char *custom_workpath);
 void set_volume_active(RaidVolume_t *volume, int active);
 
 const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
 const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
-
+const char *volume_full_path_for_work_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
+	
 DIR **volume_active_dir_entries(const char *relative_raid_path);
 
 /* Pass in pre-allocated mem for which_volume and fullpath. Returns 0 on success */
@@ -104,6 +109,14 @@ int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t ui
 int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
 
 RaidVolume_t *volume_with_most_bytes_free();
+
+/* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */
+/* This file returns a bit-wise or of the mode values stat'd from each instance (or 0 if no instances). This way you can tell if there are mode mismatches */
+mode_t volume_diagnose_raid_file_possession(const char *path,
+											int64_t *instances,
+											RaidVolume_t **posessing_volume_with_least_affinity, char *fullpath_to_possessing,
+											RaidVolume_t **unposessing_volume_with_most_affinity, char *fullpath_to_unpossessing);
+
 
 /* ----------------------- JSON ------------------------------------ */
 

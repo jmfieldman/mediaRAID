@@ -99,12 +99,15 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
 	
 	const char *raiddirp  = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "raiddir");
 	const char *trashdirp = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "trashdir");
-
+	const char *workdirp  = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "workdir");
+	
 	char raiddir[PATH_MAX];
 	char trashdir[PATH_MAX];
+	char workdir[PATH_MAX];
 	
-	cleandir(raiddirp, raiddir);
+	cleandir(raiddirp,  raiddir);
 	cleandir(trashdirp, trashdir);
+	cleandir(workdirp,  workdir);
 	
 	/* Check volume exists */
 	volume_api_lock();
@@ -121,7 +124,7 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
 	}
 
 	/* Create the volume */
-	RaidVolume_t *volume = create_volume(alias, basepath, raiddir, trashdir);
+	RaidVolume_t *volume = create_volume(alias, basepath, raiddir, trashdir, workdir);
 	if (!volume) {
 		volume_api_unlock();
 		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_VOLUME_ALLOC_ERROR, "volume could not be allocated"));

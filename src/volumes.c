@@ -11,6 +11,7 @@
 #include <string.h>
 #include <memory.h>
 #include <libgen.h>
+#include <limits.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
@@ -27,7 +28,8 @@
 /* ----------------------- Default directories --------------------- */
 
 static char s_default_raiddir[PATH_MAX]  = "/mediaRAID";
-static char s_default_trashdir[PATH_MAX] = "/mediaRAID-trash";
+static char s_default_trashdir[PATH_MAX] = "/.mediaRAID-trash";
+static char s_default_workdir[PATH_MAX]  = "/.mediaRAID-work";
 
 void set_default_raiddir(char *raiddir) {
 	strncpy(s_default_raiddir, raiddir, PATH_MAX-1);
@@ -35,6 +37,10 @@ void set_default_raiddir(char *raiddir) {
 
 void set_default_trashdir(char *trashdir) {
 	strncpy(s_default_trashdir, trashdir, PATH_MAX-1);
+}
+
+void set_default_workdir(char *workdir) {
+	strncpy(s_default_workdir, workdir, PATH_MAX-1);
 }
 
 
@@ -223,7 +229,7 @@ int volume_is_trash_ready(RaidVolume_t *volume) {
 /* Creates a RaidVolume_t struct from the given parameters.
    basepath is required. 
  */
-RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath) {
+RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath, const char *custom_workpath) {
 	RaidVolume_t *volume = (RaidVolume_t*)malloc(sizeof(RaidVolume_t));
 	if (!volume) return NULL;
 	
@@ -240,9 +246,11 @@ RaidVolume_t *create_volume(const char *alias, const char *basepath, const char 
 	/* Other paths */
 	if (!custom_raidpath  || *custom_raidpath == 0  ) custom_raidpath  = s_default_raiddir;
 	if (!custom_trashpath || *custom_trashpath == 0 ) custom_trashpath = s_default_trashdir;
+	if (!custom_workpath  || *custom_workpath == 0  ) custom_workpath  = s_default_workdir;
 	
 	snprintf(volume->raidpath,  PATH_MAX-1, "%s%s", basepath, custom_raidpath);
 	snprintf(volume->trashpath, PATH_MAX-1, "%s%s", basepath, custom_trashpath);
+	snprintf(volume->workpath,  PATH_MAX-1, "%s%s", basepath, custom_workpath);
 	
 	/* concat helpers */
 	strncpy(volume->concatpath, volume->raidpath, PATH_MAX-1);
@@ -319,6 +327,11 @@ const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *vol
 
 const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer) {
 	snprintf(buffer, PATH_MAX-1, "%s%s", volume->trashpath, volume_path );
+	return buffer;
+}
+
+const char *volume_full_path_for_work_path(RaidVolume_t *volume, const char *volume_path, char *buffer) {
+	snprintf(buffer, PATH_MAX-1, "%s%s", volume->workpath, volume_path );
 	return buffer;
 }
 
@@ -528,6 +541,69 @@ RaidVolume_t *volume_with_most_bytes_free() {
 	
 	pthread_mutex_unlock(&volume_list_mutex);
 	return response;
+}
+
+/* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */
+/* This file returns a bit-wise or of the mode values stat'd from each instance (or 0 if no instances). This way you can tell if there are mode mismatches */
+mode_t volume_diagnose_raid_file_possession(const char *path,
+											int64_t *instances,
+											RaidVolume_t **posessing_volume_with_least_affinity, char *fullpath_to_possessing,
+											RaidVolume_t **unposessing_volume_with_most_affinity, char *fullpath_to_unpossessing) {
+	
+	/* Sanity check */
+	if (!path) return 0;
+	
+	/* Counters */
+	int    instance_count = 0;
+	mode_t mode_result    = 0;
+	
+	RaidVolume_t *poss_volume_with_less_aff = NULL;
+	RaidVolume_t *unpo_volume_with_most_aff = NULL;
+	int64_t       poss_volume_with_less_aff_free = INT_MAX;
+	int64_t       unpo_volume_with_most_aff_free = 0;
+	
+	pthread_mutex_lock(&volume_list_mutex);
+
+	VolumeNode_t *volume = active_volumes;
+	while (volume) {
+		
+		/* Check presence of file in each volume */
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, path, fullpath);
+		struct stat stbuf;
+		
+		if (!stat(fullpath, &stbuf)) {
+			/* If stat succeeds, file is "present" */
+			instance_count++;
+			
+			/* Or-in the mode */
+			mode_result |= stbuf.st_mode;
+			
+			/* Volume calcs: we want the possessing volume w/ least percent free */
+			if (poss_volume_with_less_aff_free > volume->volume->percent_free) {
+				poss_volume_with_less_aff_free = volume->volume->percent_free;
+				poss_volume_with_less_aff      = volume->volume;
+			}
+		} else {
+			/* If stat failed, calc for the volume with most bytes free */
+			if (unpo_volume_with_most_aff_free < volume->volume->capacity_free) {
+				unpo_volume_with_most_aff_free = volume->volume->capacity_free;
+				unpo_volume_with_most_aff      = volume->volume;
+			}
+		}
+				
+		volume = volume->next;
+	}
+	
+	/* Fill out pertinent variables */
+	if (instances) *instances = instance_count;
+	if (posessing_volume_with_least_affinity)  *posessing_volume_with_least_affinity  = poss_volume_with_less_aff;
+	if (unposessing_volume_with_most_affinity) *unposessing_volume_with_most_affinity = unpo_volume_with_most_aff;
+	if (fullpath_to_possessing)   volume_full_path_for_raid_path(poss_volume_with_less_aff, path, fullpath_to_possessing);
+	if (fullpath_to_unpossessing) volume_full_path_for_raid_path(unpo_volume_with_most_aff, path, fullpath_to_unpossessing);
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return mode_result;
 }
 
 
