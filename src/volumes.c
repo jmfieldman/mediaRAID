@@ -11,6 +11,7 @@
 #include <string.h>
 #include <memory.h>
 #include <libgen.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
 #include <dirent.h>
@@ -366,6 +367,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	
 	VolumeNode_t *most_recent_volume = NULL;
 	time_t        most_recent_time   = -1;
+	int           stat_resp;
 	
 	while (volume) {
 		/* Go through all volumes and find the volume w/ the latest modification date */
@@ -381,6 +383,8 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 					memcpy(stbuf, &tmp_stbuf, sizeof(struct stat));
 				}
 			}
+		} else {
+			stat_resp = -errno;
 		}
 		
 		volume = volume->next;
@@ -389,7 +393,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	/* No files? return failure */
 	if (most_recent_time == -1) {
 		pthread_mutex_unlock(&volume_list_mutex);
-		return -1;
+		return stat_resp;
 	}
 	
 	/* Otherwise, set data */

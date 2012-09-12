@@ -25,6 +25,7 @@ struct fuse_operations fuse_oper_struct = {
 	.getattr   = multiplex_getattr,
 	.readdir   = multiplex_readdir,
 	.mknod     = multiplex_mknod,
+	.create    = multiplex_create,
 	.open      = multiplex_open,
 	.read      = multiplex_read,
 	.write     = multiplex_write,
@@ -116,6 +117,8 @@ int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 int multiplex_mknod(const char *path, mode_t mode, dev_t dev) {
 	
+	EXLog(FUSE, DBG, "multiplex_mknod [%s]", path);
+	
 	/* Check if the file exists */
 	if (!volume_most_recently_modified_instance(path, NULL, NULL, NULL)) {
 		return -EEXIST;
@@ -129,7 +132,35 @@ int multiplex_mknod(const char *path, mode_t mode, dev_t dev) {
 	
 	char fullpath[PATH_MAX];
 	volume_full_path_for_raid_path(volume, path, fullpath);
-	return mknod(fullpath, mode, dev);	
+	return mknod(fullpath, mode, dev);
+}
+
+int multiplex_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
+	
+	EXLog(FUSE, DBG, "multiplex_create [%s]", path);
+	
+	/* Check if the file exists */
+	if (!volume_most_recently_modified_instance(path, NULL, NULL, NULL)) {
+		return -EEXIST;
+	}
+	
+	/* Get the volume with the most free space */
+	RaidVolume_t *volume = volume_with_most_bytes_free();
+	if (!volume) {
+		return -ENOENT;
+	}
+	
+	char fullpath[PATH_MAX];
+	volume_full_path_for_raid_path(volume, path, fullpath);
+	int64_t fh = open(fullpath, O_CREAT | fi->flags, mode);
+	fi->fh = fh;
+	
+	/* Add fh to dictionary */
+	if (fh >= 0) {
+		set_open_fh_for_path(path, fh, volume->basepath);
+	}
+	
+	return 0;
 }
 
 int multiplex_open(const char *path, struct fuse_file_info *fi) {
@@ -227,6 +258,9 @@ int multiplex_mkdir(const char *path, mode_t mode) {
 }
 
 int multiplex_truncate(const char *path, off_t length) {
+	
+	EXLog(FUSE, DBG, "multiplex_truncate [%s | %lld]", path, length);
+	
 	/* If already open, attempt to truncate the existing */
 	int64_t fh;
 	char basepath[PATH_MAX];

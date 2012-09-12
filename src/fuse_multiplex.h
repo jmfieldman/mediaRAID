@@ -18,6 +18,7 @@ int multiplex_getattr(const char *path, struct stat *stbuf);
 int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 					  off_t offset, struct fuse_file_info *fi);
 int multiplex_mknod(const char *path, mode_t mode, dev_t dev);
+int multiplex_create(const char *path, mode_t mode, struct fuse_file_info *fi);
 int multiplex_open(const char *path, struct fuse_file_info *fi);
 int multiplex_read(const char *path, char *buf, size_t size, off_t offset,
 				   struct fuse_file_info *fi);
