@@ -265,6 +265,12 @@ LinkedList_t *linked_list_create() {
 	return list;
 }
 
+void linked_list_init(LinkedList_t *list) {
+	list->front = NULL;
+	list->back = NULL;
+	pthread_mutex_init(&list->mutex, NULL);
+}
+
 void __list_node_destroy(struct list_node *node) {
 	if (!node) return;
 	__list_node_destroy(node->next);
@@ -352,3 +358,50 @@ void *linked_list_peek(LinkedList_t *list, int front) {
 }
 
 
+
+
+/* ------------------------------------- Tiered Priority Queue ------------------------------------ */
+
+TieredPriorityQueue_t *tiered_priority_queue_create() {
+	TieredPriorityQueue_t *queue = (TieredPriorityQueue_t*)malloc(sizeof(TieredPriorityQueue_t));
+	if (!queue) return queue;
+	
+	for (int i = 0; i < TIERED_PRIORITY_QUEUE_LEVELS; i++) {
+		linked_list_init(&queue->lists[i]);
+	}
+	
+	pthread_mutex_init(&queue->mutex, NULL);
+	
+	return queue;
+}
+
+void tiered_priority_queue_push(TieredPriorityQueue_t *queue, int priority, int front, void *data) {
+	if (priority >= TIERED_PRIORITY_QUEUE_LEVELS) priority = TIERED_PRIORITY_QUEUE_LEVELS-1;
+	if (priority < 0) priority = 0;
+	pthread_mutex_lock(&queue->mutex);
+	linked_list_push(&queue->lists[priority], front, data);
+	pthread_mutex_unlock(&queue->mutex);
+}
+
+void *tiered_priority_queue_pop(TieredPriorityQueue_t *queue) {
+	void *resp_data = NULL;
+	pthread_mutex_lock(&queue->mutex);
+	for (int i = 0; i < TIERED_PRIORITY_QUEUE_LEVELS; i++) {
+		resp_data = linked_list_pop_front(&queue->lists[i]);
+		if (resp_data) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&queue->mutex);
+	return resp_data;
+}
+
+void *tiered_priority_queue_pop_priority(TieredPriorityQueue_t *queue, int priority) {
+	if (priority >= TIERED_PRIORITY_QUEUE_LEVELS) priority = TIERED_PRIORITY_QUEUE_LEVELS-1;
+	if (priority < 0) priority = 0;
+	
+	pthread_mutex_lock(&queue->mutex);
+	void *resp_data = linked_list_pop_front(&queue->lists[priority]);
+	pthread_mutex_unlock(&queue->mutex);
+	return resp_data;
+}

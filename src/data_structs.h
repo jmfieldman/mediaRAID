@@ -57,10 +57,28 @@ typedef struct {
 } LinkedList_t;
 
 LinkedList_t *linked_list_create();
+void linked_list_init(LinkedList_t *list);
 void linked_list_destroy(LinkedList_t *list);
 void linked_list_push(LinkedList_t *list, int front, void *data);
 void *linked_list_pop_front(LinkedList_t *list); /* caller must free() response void* */
 void *linked_list_peek(LinkedList_t *list, int front); /* caller must NOT free() response */
+
+
+/* Tiered Priority Queue */
+
+#define TIERED_PRIORITY_QUEUE_LEVELS 7
+
+typedef struct {
+	
+	LinkedList_t       lists[TIERED_PRIORITY_QUEUE_LEVELS];
+	pthread_mutex_t    mutex;
+	
+} TieredPriorityQueue_t;
+
+TieredPriorityQueue_t *tiered_priority_queue_create();
+void tiered_priority_queue_push(TieredPriorityQueue_t *queue, int priority, int front, void *data);
+void *tiered_priority_queue_pop(TieredPriorityQueue_t *queue);
+void *tiered_priority_queue_pop_priority(TieredPriorityQueue_t *queue, int priority);
 
 
 #endif
