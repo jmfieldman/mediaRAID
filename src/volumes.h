@@ -111,11 +111,15 @@ int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t m
 RaidVolume_t *volume_with_most_bytes_free();
 
 /* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */
-/* This file returns a bit-wise or of the mode values stat'd from each instance (or 0 if no instances). This way you can tell if there are mode mismatches */
-mode_t volume_diagnose_raid_file_possession(const char *path,
-											int64_t *instances,
-											RaidVolume_t **posessing_volume_with_least_affinity, char *fullpath_to_possessing,
-											RaidVolume_t **unposessing_volume_with_most_affinity, char *fullpath_to_unpossessing);
+void volume_diagnose_raid_file_posession(const char *path,
+										 int *instances, int *absences,
+										 mode_t *mode_or, int *mode_conflict,
+										 RaidVolume_t **posessing_volume_with_least_affinity, char *fullpath_to_possessing,
+										 RaidVolume_t **unposessing_volume_with_most_affinity, char *fullpath_to_unpossessing);
+
+/* Assumes a check has already been made to detect mode conflicts.  This renames each element to resolve conflicts */
+void volume_resolve_conflicting_modes(const char *path);
+
 
 
 /* ----------------------- JSON ------------------------------------ */

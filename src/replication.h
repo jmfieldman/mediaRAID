@@ -50,6 +50,8 @@ typedef struct {
 
 /* -------------- Engine --------------- */
 
+void replication_task_init(ReplicationTask_t *task);
+
 void replication_start();
 void replication_pause();
 

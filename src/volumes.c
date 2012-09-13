@@ -25,6 +25,13 @@
 #define json_boolean(val)      ((val) ? json_true() : json_false())
 #endif
 
+/* ----------------------- File Mode Helpers ----------------------- */
+
+#define NUM_FILE_MODES 8
+static int         s_file_mode_types[NUM_FILE_MODES] = { S_IFIFO, S_IFCHR, S_IFDIR, S_IFBLK, S_IFREG, S_IFLNK, S_IFSOCK, S_IFWHT };
+static const char *s_file_mode_ext[NUM_FILE_MODES]   = { "fifo",  "chr",   "dir",   "blk",   "file",  "lnk",   "sock",   "wht"   };
+static char       *s_file_conflict_appendix          = ".mediaRAID-conflict";
+
 /* ----------------------- Default directories --------------------- */
 
 static char s_default_raiddir[PATH_MAX]  = "/mediaRAID";
@@ -544,18 +551,20 @@ RaidVolume_t *volume_with_most_bytes_free() {
 }
 
 /* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */
-/* This file returns a bit-wise or of the mode values stat'd from each instance (or 0 if no instances). This way you can tell if there are mode mismatches */
-mode_t volume_diagnose_raid_file_possession(const char *path,
-											int64_t *instances,
-											RaidVolume_t **posessing_volume_with_least_affinity, char *fullpath_to_possessing,
-											RaidVolume_t **unposessing_volume_with_most_affinity, char *fullpath_to_unpossessing) {
+void volume_diagnose_raid_file_posession(const char *path,
+										 int *instances, int *absences,
+										 mode_t *mode_or, int *mode_conflict,
+										 RaidVolume_t **posessing_volume_with_least_affinity, char *fullpath_to_possessing,
+										 RaidVolume_t **unposessing_volume_with_most_affinity, char *fullpath_to_unpossessing) {
 	
 	/* Sanity check */
-	if (!path) return 0;
+	if (!path) return;
 	
 	/* Counters */
 	int    instance_count = 0;
+	int    absence_count  = 0;
 	mode_t mode_result    = 0;
+	int    mode_conf_res  = 0;
 	
 	RaidVolume_t *poss_volume_with_less_aff = NULL;
 	RaidVolume_t *unpo_volume_with_most_aff = NULL;
@@ -577,6 +586,9 @@ mode_t volume_diagnose_raid_file_possession(const char *path,
 			instance_count++;
 			
 			/* Or-in the mode */
+			if (mode_result && ((mode_result & S_IFMT) != (stbuf.st_mode & S_IFMT))) {
+				mode_conf_res = 1;
+			}
 			mode_result |= stbuf.st_mode;
 			
 			/* Volume calcs: we want the possessing volume w/ least percent free */
@@ -585,6 +597,8 @@ mode_t volume_diagnose_raid_file_possession(const char *path,
 				poss_volume_with_less_aff      = volume->volume;
 			}
 		} else {
+			absence_count++;
+			
 			/* If stat failed, calc for the volume with most bytes free */
 			if (unpo_volume_with_most_aff_free < volume->volume->capacity_free) {
 				unpo_volume_with_most_aff_free = volume->volume->capacity_free;
@@ -596,14 +610,87 @@ mode_t volume_diagnose_raid_file_possession(const char *path,
 	}
 	
 	/* Fill out pertinent variables */
-	if (instances) *instances = instance_count;
+	if (instances)     *instances     = instance_count;
+	if (absences)      *absences      = absence_count;
+	if (mode_or)       *mode_or       = mode_result;
+	if (mode_conflict) *mode_conflict = mode_conf_res;
 	if (posessing_volume_with_least_affinity)  *posessing_volume_with_least_affinity  = poss_volume_with_less_aff;
 	if (unposessing_volume_with_most_affinity) *unposessing_volume_with_most_affinity = unpo_volume_with_most_aff;
 	if (fullpath_to_possessing)   volume_full_path_for_raid_path(poss_volume_with_less_aff, path, fullpath_to_possessing);
 	if (fullpath_to_unpossessing) volume_full_path_for_raid_path(unpo_volume_with_most_aff, path, fullpath_to_unpossessing);
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return mode_result;
+	return;
+}
+
+
+/* Assumes a check has already been made to detect mode conflicts.  This renames each element to resolve conflicts */
+void volume_resolve_conflicting_modes(const char *path) {
+
+	/* Sanity */
+	if (!path) return;
+	
+	/* Allocate conflict resolution paths */
+	char *conflict_resolution_paths[NUM_FILE_MODES];
+	for (int i = 0; i < NUM_FILE_MODES; i++) {
+		conflict_resolution_paths[i] = (char*)malloc(PATH_MAX);
+	}
+	
+	/* Determine resolution paths */
+	for (int mode = 0; mode < NUM_FILE_MODES; mode++) {
+		
+		/* Iterate "attempt" until we find a unique path on the filesystem */
+		int attempt = 0;
+		while (1) {
+			snprintf(conflict_resolution_paths[mode], PATH_MAX-1, "%s%s.%d.%s", path, s_file_conflict_appendix, attempt, s_file_mode_ext[mode]);
+			
+			/* Does this file exist on the raid? */
+			if (volume_most_recently_modified_instance(conflict_resolution_paths[mode], NULL, NULL, NULL)) {
+				break;
+			}
+			
+			attempt++;
+		}
+	}
+	
+	/* Now we just iterate and rename */
+	pthread_mutex_lock(&volume_list_mutex);
+	VolumeNode_t *volume = active_volumes;
+	while (volume) {
+	
+		char oldpath[PATH_MAX];
+		char newpath[PATH_MAX];
+		struct stat stbuf;
+		
+		volume_full_path_for_raid_path(volume->volume, path, oldpath);
+		int stat_resp = stat(oldpath, &stbuf);
+		if (!stat_resp) {
+			/* File found */
+			int which_mode = 4;
+			for (int mode = 0; mode < NUM_FILE_MODES; mode++) {
+				if ((stbuf.st_mode & S_IFMT) == s_file_mode_types[mode]) {
+					which_mode = mode;
+					break;
+				}
+			}
+			
+			/* rename based on mode; do not rename directories */
+			if (which_mode != 2) {
+				volume_full_path_for_raid_path(volume->volume, conflict_resolution_paths[which_mode], newpath);
+				rename(oldpath, newpath);
+			}
+		}
+		
+		volume = volume->next;
+	}
+	pthread_mutex_unlock(&volume_list_mutex);
+	
+	/* Clean paths */
+	for (int i = 0; i < NUM_FILE_MODES; i++) {
+		free(conflict_resolution_paths[i]);
+	}
+	
+	return;
 }
 
 

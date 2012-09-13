@@ -22,6 +22,11 @@ static pthread_t              s_replication_thread;
 
 void *replication_thread(void *arg);
 
+void replication_task_init(ReplicationTask_t *task) {
+	task->path[0] = 0;
+	task->volume_basepath[0] = 0;
+}
+
 /* ------------------------- Replication Start/Pause ------------------------------ */
 
 void replication_start() {
@@ -52,6 +57,77 @@ void replication_queue_task(ReplicationTask_t *task, OperationPriority_t priorit
 /* ---------------------------- Replication Operations ------------------------------- */
 
 void replication_task_mirror_directory(ReplicationTask_t *task) {
+	
+	int    absences      = 0;
+	mode_t mode          = 0;
+	int    mode_conflict = 0;
+	
+	EXLog(REPL, DBG, "Task: mirror directory [%s]", task->path);
+	
+	/* Perform diagnostics on the path */
+	volume_diagnose_raid_file_posession(task->path, NULL, &absences, &mode, &mode_conflict, NULL, NULL, NULL, NULL);
+	
+	/* If this isn't a directory, just exit */
+	if (!mode_conflict && (mode & S_IFMT) != S_IFDIR) {
+		return;
+	}
+	
+	/* Conflict?  Resolve */
+	if (mode_conflict) {
+		volume_resolve_conflicting_modes(task->path);
+		
+		/* Perform diagnostics on the path again */
+		volume_diagnose_raid_file_posession(task->path, NULL, &absences, &mode, &mode_conflict, NULL, NULL, NULL, NULL);
+		
+		/* If this isn't a directory, just exit */
+		if (!mode_conflict && (mode & S_IFMT) != S_IFDIR) {
+			return;
+		}
+	}
+	
+	/* Absences? Make directories */
+	if (absences) {
+		volume_mkdir_path_on_active_volumes(task->path, (mode & 0xFFFF) | S_IFDIR);
+	}
+	
+	/* Now we should queue up child directories */
+	/* Get all the DIR entries for the active volumes */
+	DIR **entries = volume_active_dir_entries(task->path);
+	DIR **entries_start = entries;
+	
+	ReplicationTask_t child_task;
+	replication_task_init(&child_task);
+	child_task.opcode = REP_OP_MIRROR_DIRECTORY;
+	child_task.volume_basepath[0] = 0;
+	
+	if (entries) {
+		/* create a hash table that will help detect duplicate entries */
+		Dictionary_t *dic = dictionary_create_with_size(512);
+		int64_t tmp;
+		while (*entries) {
+			/* For each DIR, iterate through and grab entries */
+			DIR *entry = *entries;
+			struct dirent *dent = readdir(entry);
+			while (dent) {
+				
+				if (dent->d_type == DT_DIR && strcmp("..", dent->d_name) && strcmp(".", dent->d_name)) {
+					/* For each entry, add it to the list if it doesn't exist in the hash table */
+					if (!dictionary_get_int(dic, dent->d_name, &tmp)) {
+						dictionary_set_int(dic, dent->d_name, tmp);
+						snprintf(child_task.path, PATH_MAX-1, "%s/%s", task->path, dent->d_name);
+						replication_queue_task(&child_task, OP_PRI_SYNC_DIR, 1);
+					}
+				}
+				
+				dent = readdir(entry);
+			}
+			closedir(entry); /* Don't forget to close the DIR after use! */
+			entries++;
+		}
+		/* Free memory */
+		dictionary_destroy(dic);
+		free(entries_start);
+	}
 	
 }
 

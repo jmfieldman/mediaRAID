@@ -15,6 +15,8 @@
 #include "exlog.h"
 #include "httpd.h"
 #include "volumes.h"
+#include "files.h"
+#include "replication.h"
 
 /* ------------------ JSON Helpers ------------------- */
 
@@ -152,6 +154,30 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
 void handle_volume_remove_request(struct MHD_Connection *connection) {
 }
 
+/*
+ Begins sync process for a given path
+ path: Root directory to begin sync operation
+ */
+void handle_sync_path_request(struct MHD_Connection *connection) {
+	/* Get arguments */
+	const char *path = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "path");
+	if (!path || !strnlen(path, PATH_MAX)) {
+		path = "/";
+	}
+	
+	ReplicationTask_t task;
+	replication_task_init(&task);
+	
+	task.opcode = REP_OP_MIRROR_DIRECTORY;
+	snprintf(task.path, PATH_MAX-1, "%s", path);
+	
+	replication_queue_task(&task, OP_PRI_SYNC_DIR, 0);
+	
+	/* Respond */
+	json_t *resp = create_object_with_status(MRAID_OK, "sync operation begun");
+	send_json_response(connection, MHD_HTTP_OK, resp);
+}
+
 
 /* ------------------ Main Daemon -------------------- */
 
@@ -189,6 +215,8 @@ int httpd_access_handler (void *cls,
 		handle_volume_add_request(connection);
 	} else if (URL_MATCHES( "/volume/remove" )) {
 		handle_volume_remove_request(connection);
+	} else if (URL_MATCHES( "/sync/path" )) {
+		handle_sync_path_request(connection);
 	} else {
 		EXLog(COMM, DBG, "URL is not a valid command");
 		struct MHD_Response * response;
