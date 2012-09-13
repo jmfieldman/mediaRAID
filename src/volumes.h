@@ -119,6 +119,7 @@ DIR **volume_active_dir_entries(const char *relative_raid_path);
 
 /* Pass in pre-allocated mem for which_volume and fullpath. Returns 0 on success */
 int volume_most_recently_modified_instance(const char *relative_raid_path, RaidVolume_t **which_volume, char *fullpath, struct stat *stbuf);
+int volume_kill_aged_instances_of_path(const char *relative_raid_path);
 
 int volume_statvfs(const char *path, struct statvfs *statbuf);
 

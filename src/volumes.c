@@ -444,6 +444,63 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	return 0;
 }
 
+int volume_kill_aged_instances_of_path(const char *relative_raid_path) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	int killed_instances = 0;
+	int instances        = 0;
+	
+	VolumeNode_t *volume = active_volumes;
+	struct stat tmp_stbuf;
+
+	VolumeNode_t *most_recent_volume = NULL;
+	time_t        most_recent_time   = -1;
+	
+	while (volume) {
+		/* Go through all volumes and find the volume w/ the latest modification date */
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int s = stat(fullpath, &tmp_stbuf);
+		if (s == 0) {
+			instances++;
+			if (tmp_stbuf.st_mtimespec.tv_sec > most_recent_time) {
+				most_recent_time   = tmp_stbuf.st_mtimespec.tv_sec;
+				most_recent_volume = volume;
+			}
+		}
+		volume = volume->next;
+	}
+	
+	/* 0 or 1 files? return */
+	if (most_recent_time == -1 || (instances < 2)) {
+		pthread_mutex_unlock(&volume_list_mutex);
+		return 0;
+	}
+
+	/* Now unlink any files out of date */
+	volume = active_volumes;
+	
+	while (volume) {
+		/* Go through all volumes and find the volume out of date */
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int s = stat(fullpath, &tmp_stbuf);
+		if (s == 0) {
+			if (tmp_stbuf.st_mtimespec.tv_sec < most_recent_time) {
+				unlink(fullpath);
+				EXLog(VOLUME, DBG, " > Unlinked as out of date [%s]", fullpath);
+				killed_instances++;
+			}
+		}
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return killed_instances;
+}
+
 int volume_statvfs(const char *relative_raid_path, struct statvfs *statbuf) {
 	pthread_mutex_lock(&volume_list_mutex);
 	

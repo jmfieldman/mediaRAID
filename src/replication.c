@@ -459,6 +459,9 @@ void replication_task_balance_file(ReplicationTask_t *task) {
 	char fullpath_to_poss[PATH_MAX];
 	char fullpath_to_unpo[PATH_MAX];
 		
+	/* Remove old files */
+	volume_kill_aged_instances_of_path(task->path);
+	
 	volume_diagnose_raid_file_posession(task->path, &instances, &absences, &mode, &mode_conflict, &poss_volume_less_aff, fullpath_to_poss, &unpo_volume_most_aff, fullpath_to_unpo);
 	if (mode_conflict) {
 		volume_resolve_conflicting_modes(task->path);
@@ -508,6 +511,11 @@ void *replication_thread(void *arg) {
 	
 	while (1) {
 		
+		/* Clear replication file flag */
+		pthread_mutex_lock(&s_replication_halt_replication_mutex);
+		*s_replication_currently_replicating_file = 0;
+		pthread_mutex_unlock(&s_replication_halt_replication_mutex);
+			
 		ReplicationTask_t *next_task = (ReplicationTask_t*)tiered_priority_queue_pop(s_replication_queue);
 				
 		if (next_task) {
