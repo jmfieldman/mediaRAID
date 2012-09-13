@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <stdlib.h>
 #include <errno.h>
 
 #include "fuse_multiplex.h"
@@ -41,6 +42,9 @@ struct fuse_operations fuse_oper_struct = {
 
 void *multiplex_init(struct fuse_conn_info *conn) {
 
+	/* Init random number gen */
+	srand((unsigned int)time(0));
+	
 	/* Initialization of open table lookup */
 	init_open_fh_table();
 	

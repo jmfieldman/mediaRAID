@@ -96,7 +96,9 @@ void set_volume_active(RaidVolume_t *volume, int active);
 const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
 const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
 const char *volume_full_path_for_work_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
-	
+
+int volume_avaialble_work_path(RaidVolume_t *volume, char *buffer);
+
 DIR **volume_active_dir_entries(const char *relative_raid_path);
 
 /* Pass in pre-allocated mem for which_volume and fullpath. Returns 0 on success */
@@ -108,6 +110,7 @@ int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t m
 int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t uid, gid_t gid);
 int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
 
+void volume_update_all_byte_counters();
 RaidVolume_t *volume_with_most_bytes_free();
 
 /* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */

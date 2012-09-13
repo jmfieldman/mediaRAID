@@ -173,6 +173,9 @@ void handle_sync_path_request(struct MHD_Connection *connection) {
 	
 	replication_queue_task(&task, OP_PRI_SYNC_DIR, 0);
 	
+	task.opcode = REP_OP_BALANCE_FILES_IN_DIR;
+	replication_queue_task(&task, OP_PRI_SYNC_FILE, 0);
+	
 	/* Respond */
 	json_t *resp = create_object_with_status(MRAID_OK, "sync operation begun");
 	send_json_response(connection, MHD_HTTP_OK, resp);

@@ -25,6 +25,9 @@ typedef enum {
 	/* Bring file closer to the redundancy number across active volumes */
 	REP_OP_BALANCE_FILE,
 	
+	/* Scan a directory and place all files in the queue, then move on to subdirs */
+	REP_OP_BALANCE_FILES_IN_DIR,
+		
 	/* Ensure that the directory is mirrored properly across active directories.
 	   The operation automatically queues subdirectories, so you only to manually add the parent */
 	REP_OP_MIRROR_DIRECTORY,
@@ -46,6 +49,15 @@ typedef struct {
 	char                  volume_basepath[PATH_MAX];
 	
 } ReplicationTask_t;
+
+
+/* -------------- Settings -------------- */
+
+void replication_set_min_redundancy_count(int min_redundancy);
+int  replication_get_min_redundancy_count();
+
+void replication_set_overredundant_removal_perc_thresh(int removal_thresh);
+int  replication_get_overredundant_removal_perc_thresh();
 
 
 /* -------------- Engine --------------- */

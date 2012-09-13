@@ -343,6 +343,22 @@ const char *volume_full_path_for_work_path(RaidVolume_t *volume, const char *vol
 }
 
 
+int volume_avaialble_work_path(RaidVolume_t *volume, char *buffer) {
+	int attempt = 0;
+	do {
+		/* Try random filepath */
+		snprintf(buffer, PATH_MAX-1, "%s/%d", volume->workpath, (int)(rand() % 10000000));
+		struct stat stbuf;
+		if (stat(buffer, &stbuf)) {
+			/* If stat returns -1, no file present and we can return this buffer */
+			return 1;
+		}
+		attempt++;
+	} while (attempt < 100);
+	return 0;
+}
+
+
 DIR **volume_active_dir_entries(const char *relative_raid_path) {
 	pthread_mutex_lock(&volume_list_mutex);
 	int active_volume_count= count_volumes_in_list_nonatomic(active_volumes);
@@ -525,6 +541,16 @@ int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t m
 }
 
 
+void volume_update_all_byte_counters() {
+	pthread_mutex_lock(&volume_list_mutex);
+	VolumeNode_t *volume = active_volumes;
+	while (volume) {
+		update_volume_byte_counters(volume->volume);
+		volume = volume->next;
+	}
+	pthread_mutex_unlock(&volume_list_mutex);
+}
+
 
 RaidVolume_t *volume_with_most_bytes_free() {
 	pthread_mutex_lock(&volume_list_mutex);
@@ -570,6 +596,7 @@ void volume_diagnose_raid_file_posession(const char *path,
 	RaidVolume_t *unpo_volume_with_most_aff = NULL;
 	int64_t       poss_volume_with_less_aff_free = INT_MAX;
 	int64_t       unpo_volume_with_most_aff_free = 0;
+	int64_t       poss_modified_time             = LLONG_MAX;
 	
 	pthread_mutex_lock(&volume_list_mutex);
 
@@ -592,9 +619,10 @@ void volume_diagnose_raid_file_posession(const char *path,
 			mode_result |= stbuf.st_mode;
 			
 			/* Volume calcs: we want the possessing volume w/ least percent free */
-			if (poss_volume_with_less_aff_free > volume->volume->percent_free) {
+			if ((poss_volume_with_less_aff_free > volume->volume->percent_free) && (stbuf.st_mtimespec.tv_sec < poss_modified_time)) {
 				poss_volume_with_less_aff_free = volume->volume->percent_free;
 				poss_volume_with_less_aff      = volume->volume;
+				poss_modified_time             = stbuf.st_mtimespec.tv_sec;
 			}
 		} else {
 			absence_count++;
@@ -616,8 +644,8 @@ void volume_diagnose_raid_file_posession(const char *path,
 	if (mode_conflict) *mode_conflict = mode_conf_res;
 	if (posessing_volume_with_least_affinity)  *posessing_volume_with_least_affinity  = poss_volume_with_less_aff;
 	if (unposessing_volume_with_most_affinity) *unposessing_volume_with_most_affinity = unpo_volume_with_most_aff;
-	if (fullpath_to_possessing)   volume_full_path_for_raid_path(poss_volume_with_less_aff, path, fullpath_to_possessing);
-	if (fullpath_to_unpossessing) volume_full_path_for_raid_path(unpo_volume_with_most_aff, path, fullpath_to_unpossessing);
+	if (fullpath_to_possessing   && poss_volume_with_less_aff) volume_full_path_for_raid_path(poss_volume_with_less_aff, path, fullpath_to_possessing);
+	if (fullpath_to_unpossessing && unpo_volume_with_most_aff) volume_full_path_for_raid_path(unpo_volume_with_most_aff, path, fullpath_to_unpossessing);
 	
 	pthread_mutex_unlock(&volume_list_mutex);
 	return;
