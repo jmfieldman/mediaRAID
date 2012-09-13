@@ -12,9 +12,25 @@
 #include <stdint.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <pthread.h>
 #include <jansson.h>
 #include <dirent.h>
+
+#ifndef __APPLE_XATTR_POSITION__
+#ifdef __APPLE__
+#define __APPLE_XATTR_POSITION__   , u_int32_t position
+#define __APPLE_XATTR_POSITION_P__ , position
+#define __APPLE_XATTR_POSITION_P2__ , position , options
+#define __APPLE_XATTR_POSITION_P3__ , 0
+#else
+#define __APPLE_XATTR_POSITION__
+#define __APPLE_XATTR_POSITION_P__
+#define __APPLE_XATTR_POSITION_P2__
+#define __APPLE_XATTR_POSITION_P3__ 
+#endif
+#endif
+
 
 /* -------------------- Defines --------------------------- */
 
@@ -104,12 +120,19 @@ DIR **volume_active_dir_entries(const char *relative_raid_path);
 /* Pass in pre-allocated mem for which_volume and fullpath. Returns 0 on success */
 int volume_most_recently_modified_instance(const char *relative_raid_path, RaidVolume_t **which_volume, char *fullpath, struct stat *stbuf);
 
+int volume_statvfs(const char *path, struct statvfs *statbuf);
+
 int volume_unlink_path_from_active_volumes(const char *relative_raid_path);
+int volume_access_path_from_active_volumes(const char *relative_raid_path, int amode);
 int volume_rmdir_path_from_active_volumes(const char *relative_raid_path);
 int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
 int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t uid, gid_t gid);
 int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t mode);
 int volume_utimens_path_on_active_volumes(const char *relative_raid_path, const struct timespec tv[2]);
+int volume_setxattr_path_on_active_volumes(const char *path, const char *name, const char *value, size_t size, int options __APPLE_XATTR_POSITION__ );
+int volume_getxattr_path_on_active_volumes(const char *path, const char *name, char *value, size_t size, int options __APPLE_XATTR_POSITION__ );
+int volume_listxattr_path_on_active_volumes(const char *path, char *name, size_t size);
+int volume_removexattr_path_on_active_volumes(const char *path, const char *name);
 
 void volume_update_all_byte_counters();
 RaidVolume_t *volume_with_most_bytes_free();

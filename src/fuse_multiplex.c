@@ -22,22 +22,29 @@
 #include "replication.h"
 
 struct fuse_operations fuse_oper_struct = {
-	.init      = multiplex_init,
-	.getattr   = multiplex_getattr,
-	.readdir   = multiplex_readdir,
-	.mknod     = multiplex_mknod,
-	.create    = multiplex_create,
-	.open      = multiplex_open,
-	.read      = multiplex_read,
-	.write     = multiplex_write,
-	.release   = multiplex_release,
-	.unlink    = multiplex_unlink,
-	.rmdir     = multiplex_rmdir,
-	.mkdir     = multiplex_mkdir,
-	.chmod     = multiplex_chmod,
-	.chown     = multiplex_chown,
-	.truncate  = multiplex_truncate,
-	.utimens   = multiplex_utimens,
+	.init           = multiplex_init,
+	.getattr        = multiplex_getattr,
+	.fgetattr       = multiplex_fgetattr,
+	.readdir        = multiplex_readdir,
+	.mknod          = multiplex_mknod,
+	.create         = multiplex_create,
+	.open           = multiplex_open,
+	.read           = multiplex_read,
+	.write          = multiplex_write,
+	.release        = multiplex_release,
+	.unlink         = multiplex_unlink,
+	.rmdir          = multiplex_rmdir,
+	.mkdir          = multiplex_mkdir,
+	.chmod          = multiplex_chmod,
+	.chown          = multiplex_chown,
+	.access         = multiplex_access,
+	.truncate       = multiplex_truncate,
+	.utimens        = multiplex_utimens,
+	.setxattr       = multiplex_setxattr,
+	.getxattr       = multiplex_getxattr,
+	.listxattr      = multiplex_listxattr,
+	.removexattr    = multiplex_removexattr,
+	.statfs         = multiplex_statfs,
 };
 
 
@@ -79,6 +86,16 @@ int multiplex_getattr(const char *path, struct stat *stbuf) {
 	
 	/* If file is closed, we have a helper function that pulls the stat struct from the most recently modified file in the active volume list */
 	return volume_most_recently_modified_instance(path, NULL, NULL, stbuf);
+}
+
+int multiplex_fgetattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
+	EXLog(FUSE, INFO, "multiplex_fgetattr wrapper called [%s]", path);
+	return multiplex_getattr(path, stbuf);
+}
+
+int multiplex_statfs(const char *path, struct statvfs *statbuf) {
+	EXLog(FUSE, INFO, "multiplex_statfs [%s]", path);
+	return volume_statvfs(path, statbuf);
 }
 
 int multiplex_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -257,6 +274,14 @@ int multiplex_unlink(const char *path) {
 	return volume_unlink_path_from_active_volumes(path);
 }
 
+int multiplex_access(const char *path, int amode) {
+	
+	EXLog(FUSE, DBG, "multiplex_access [%s]", path);
+	
+	/* We have a helper for this */
+	return volume_access_path_from_active_volumes(path, amode);
+}
+
 int multiplex_rmdir(const char *path) {
 	
 	EXLog(FUSE, DBG, "multiplex_rmdir [%s]", path);
@@ -334,5 +359,53 @@ int multiplex_utimens(const char *path, const struct timespec tv[2]) {
 	/* We have a helper for this */
 	return volume_utimens_path_on_active_volumes(path, tv);
 }
+
+int multiplex_setxattr(const char *path, const char *name, const char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
+
+	EXLog(FUSE, DBG, "multiplex_setxattr [%s | %s | %s]", path, name, value);
+	
+	/* halt replication */
+	replication_halt_replication_of_file(path);
+	
+	/* We have a helper for this */
+	return volume_setxattr_path_on_active_volumes(path, name, value, size, options __APPLE_XATTR_POSITION_P__ );
+}
+
+int multiplex_getxattr(const char *path, const char *name, char *value, size_t size __APPLE_XATTR_POSITION__ ) {
+	
+	EXLog(FUSE, DBG, "multiplex_getxattr [%s | %s]", path, name);
+	
+	/* We have a helper for this */
+	return volume_getxattr_path_on_active_volumes(path, name, value, size, 0 __APPLE_XATTR_POSITION_P__ );
+}
+
+int multiplex_listxattr(const char *path, char *namebuf, size_t size) {
+
+	EXLog(FUSE, DBG, "multiplex_listxattr [%s]", path);
+		
+	/* We have a helper for this */
+	return volume_listxattr_path_on_active_volumes(path, namebuf, size);
+}
+
+int multiplex_removexattr(const char *path, const char *name) {
+	
+	EXLog(FUSE, DBG, "multiplex_removexattr [%s | %s]", path, name);
+	
+	/* halt replication */
+	replication_halt_replication_of_file(path);
+	
+	/* We have a helper for this */
+	return volume_removexattr_path_on_active_volumes(path, name);
+}
+
+
+
+
+
+
+
+
+
+
 
 

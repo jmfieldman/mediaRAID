@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
+#include <sys/xattr.h>
 #include <dirent.h>
 #include <unistd.h>
 #include "volumes.h"
@@ -404,7 +405,6 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	
 	VolumeNode_t *most_recent_volume = NULL;
 	time_t        most_recent_time   = -1;
-	int           stat_resp;
 	
 	while (volume) {
 		/* Go through all volumes and find the volume w/ the latest modification date */
@@ -417,11 +417,10 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 				most_recent_time   = tmp_stbuf.st_mtimespec.tv_sec;
 				most_recent_volume = volume;
 				if (stbuf) {
+					EXLog(VOLUME, DBG, " > got stat on [%s]", fullpath);
 					memcpy(stbuf, &tmp_stbuf, sizeof(struct stat));
 				}
 			}
-		} else {
-			stat_resp = -errno;
 		}
 		
 		volume = volume->next;
@@ -430,7 +429,8 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	/* No files? return failure */
 	if (most_recent_time == -1) {
 		pthread_mutex_unlock(&volume_list_mutex);
-		return stat_resp;
+		EXLog(VOLUME, DBG, " > stat failed with [%d]", errno);
+		return -1;
 	}
 	
 	/* Otherwise, set data */
@@ -439,6 +439,29 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 		
 	pthread_mutex_unlock(&volume_list_mutex);
 	return 0;
+}
+
+int volume_statvfs(const char *relative_raid_path, struct statvfs *statbuf) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = statvfs(fullpath, statbuf);
+		if (!ret) {
+			pthread_mutex_unlock(&volume_list_mutex);
+			return ret;
+		}
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
 }
 
 int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
@@ -453,6 +476,29 @@ int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
 	
 		int ret = unlink(fullpath);
 		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_access_path_from_active_volumes(const char *relative_raid_path, int amode) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = access(fullpath, amode);
+		if (!ret) {
+			pthread_mutex_unlock(&volume_list_mutex);
+			return 0;
+		}
 		
 		volume = volume->next;
 	}
@@ -557,6 +603,98 @@ int volume_utimens_path_on_active_volumes(const char *relative_raid_path, const 
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
 		
 		int ret = utimes(fullpath, utv);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_setxattr_path_on_active_volumes(const char *relative_raid_path, const char *name, const char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = setxattr(fullpath, name, value, size __APPLE_XATTR_POSITION_P__ , options);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const char *name, char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = (int)getxattr(fullpath, name, value, (ssize_t)size __APPLE_XATTR_POSITION_P2__ );
+		
+		EXLog(FUSE, DBG, " > getxattr [%d] [%s]", ret, fullpath);
+		
+		if (ret >= 0) {
+			EXLog(FUSE, DBG, "   > %s", value);
+			pthread_mutex_unlock(&volume_list_mutex);
+			return ret;
+		}
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_listxattr_path_on_active_volumes(const char *relative_raid_path, char *name, size_t size) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = (int)listxattr(fullpath, name, size __APPLE_XATTR_POSITION_P3__ );
+		if (ret > 0) {
+			pthread_mutex_unlock(&volume_list_mutex);
+			return ret;
+		} else if (ret == 0) {
+			master_ret = 0;
+		}
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_removexattr_path_on_active_volumes(const char *relative_raid_path, const char *name) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = removexattr(fullpath, name __APPLE_XATTR_POSITION_P3__);
 		if (!ret) master_ret = 0;
 		
 		volume = volume->next;
@@ -698,7 +836,7 @@ void volume_resolve_conflicting_modes(const char *path) {
 		while (1) {
 			snprintf(conflict_resolution_paths[mode], PATH_MAX-1, "%s%s.%d.%s", path, s_file_conflict_appendix, attempt, s_file_mode_ext[mode]);
 			
-			/* Does this file exist on the raid? */
+			/* Non-zero if the file doesn't exist on the raid */
 			if (volume_most_recently_modified_instance(conflict_resolution_paths[mode], NULL, NULL, NULL)) {
 				break;
 			}

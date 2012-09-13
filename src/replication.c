@@ -525,7 +525,7 @@ void *replication_thread(void *arg) {
 			
 		} else {
 	
-			EXLog(REPL, INFO, "Replication thread idle");
+			//EXLog(REPL, INFO, "Replication thread idle");
 			
 			/* Sleep a second before checking for a non-empty task stack */
 			sleep(1);
