@@ -194,10 +194,11 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 				pthread_mutex_lock(&s_replication_halt_replication_mutex);
 				if (!strncmp(s_replication_halt_replication_of_file_path, relative_path, PATH_MAX)) {
 					/* Shut it down! */
-					pthread_mutex_unlock(&s_replication_halt_replication_mutex);
 					close(from_fd);
 					close(to_fd);
-					EXLog(REPL, DBG, "   > Shutting down because path [%s] was opened by the OS", workpath);
+					unlink(workpath);
+					EXLog(REPL, DBG, "   > Shutting down because path [%s] was opened by the OS", s_replication_halt_replication_of_file_path);
+					pthread_mutex_unlock(&s_replication_halt_replication_mutex);
 					return 0;
 				}
 				pthread_mutex_unlock(&s_replication_halt_replication_mutex);

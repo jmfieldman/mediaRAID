@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "data_structs.h"
-
+#include "exlog.h"
 
 
 
@@ -21,7 +21,8 @@ static unsigned hash_str(const char *s, int modu) {
 	for (hashval = 0; *s != 0; s++) {
 		hashval = *s + 31 * hashval;
 	}
-	return hashval % modu;
+	int result = hashval % modu;
+	return result;
 }
 
 static unsigned hash_int(int64_t i, int modu) {
@@ -65,7 +66,7 @@ static inline struct dic_node *__new_dic_node(const char *key) {
 	if (!len) return NULL;
 	
 	ptr->key = malloc(len+1);
-	memcpy(ptr->key, key, len);
+	memcpy(ptr->key, key, len+1);
 	
 	return ptr;
 }
@@ -114,7 +115,7 @@ void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val) {
 		if (val) {
 			size_t len = strlen(val);
 			np->str_value = malloc(len+1);
-			memcpy(np->str_value, val, len);
+			memcpy(np->str_value, val, len+1);
 		}		
 		pthread_mutex_unlock(&dic->mutex);
 		return;
@@ -129,7 +130,7 @@ void dictionary_set_str(Dictionary_t *dic, const char *key, const char *val) {
 	if (val) {
 		size_t len = strlen(val);
 		np->str_value = malloc(len+1);
-		memcpy(np->str_value, val, len);
+		memcpy(np->str_value, val, len+1);
 	}
 	
 	unsigned int hashval = hash_str(key, dic->bucket_count);
@@ -148,7 +149,7 @@ void dictionary_set_int_str(Dictionary_t *dic, const char *key, int64_t int_valu
 		if (str_val) {
 			size_t len = strlen(str_val);
 			np->str_value = malloc(len+1);
-			memcpy(np->str_value, str_val, len);
+			memcpy(np->str_value, str_val, len+1);
 		}
 		pthread_mutex_unlock(&dic->mutex);
 		return;
@@ -165,7 +166,7 @@ void dictionary_set_int_str(Dictionary_t *dic, const char *key, int64_t int_valu
 	if (str_val) {
 		size_t len = strlen(str_val);
 		np->str_value = malloc(len+1);
-		memcpy(np->str_value, str_val, len);
+		memcpy(np->str_value, str_val, len+1);
 	}
 	
 	unsigned int hashval = hash_str(key, dic->bucket_count);

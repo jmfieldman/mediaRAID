@@ -683,7 +683,7 @@ int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const
 		EXLog(FUSE, DBG, " > getxattr [%d] [%s]", ret, fullpath);
 		
 		if (ret >= 0) {
-			EXLog(FUSE, DBG, "   > %s", value);
+			//EXLog(FUSE, DBG, "   > %s", value);
 			pthread_mutex_unlock(&volume_list_mutex);
 			return ret;
 		} else {
