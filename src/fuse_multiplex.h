@@ -41,6 +41,7 @@ int multiplex_read(const char *path, char *buf, size_t size, off_t offset,
 int multiplex_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 int multiplex_release(const char *path, struct fuse_file_info *fi);
 int multiplex_unlink(const char *path);
+int multiplex_rename(const char *oldpath, const char *newpath);
 int multiplex_rmdir(const char *path);
 int multiplex_mkdir(const char *path, mode_t mode);
 int multiplex_truncate(const char *path, off_t length);

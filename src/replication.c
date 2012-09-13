@@ -488,6 +488,7 @@ void replication_task_balance_file(ReplicationTask_t *task) {
 			if (__replication_copy_regular_file(task->path, unpo_volume_most_aff)) {
 				/* If the copy succeeded, we should requeue it in case we need more */
 				/* TODO: Maybe not, since we want to spread out duplications? */
+				replication_queue_task(task, OP_PRI_SYNC_FILE, 1);
 			}
 		} break;
 	}

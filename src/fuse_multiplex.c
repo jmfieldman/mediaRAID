@@ -32,6 +32,7 @@ struct fuse_operations fuse_oper_struct = {
 	.read           = multiplex_read,
 	.write          = multiplex_write,
 	.release        = multiplex_release,
+	.rename         = multiplex_rename,
 	.unlink         = multiplex_unlink,
 	.rmdir          = multiplex_rmdir,
 	.mkdir          = multiplex_mkdir,
@@ -236,7 +237,11 @@ int multiplex_read(const char *path, char *buf, size_t size, off_t offset, struc
 	}
 	
 	/* Otherwise read */
-	return (int)read((int)fi->fh, buf, size);
+	int res = (int)read((int)fi->fh, buf, size);
+	if (res < 0) {
+		return -errno;
+	}
+	return res;
 }
 
 int multiplex_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
@@ -250,8 +255,12 @@ int multiplex_write(const char *path, const char *buf, size_t size, off_t offset
 		return -1;
 	}
 	
-	/* Otherwise read */
-	return (int)write((int)fi->fh, buf, size);
+	/* Otherwise write */
+	int res = (int)write((int)fi->fh, buf, size);
+	if (res < 0) {
+		return -errno;
+	}
+	return res;
 }
 
 int multiplex_release(const char *path, struct fuse_file_info *fi) {
@@ -260,7 +269,28 @@ int multiplex_release(const char *path, struct fuse_file_info *fi) {
 	
 	/* Close file handle and remove from dictionary */
 	set_open_fh_for_path(path, -1, NULL);
-	return close((int)fi->fh);
+	
+	int res = close((int)fi->fh);
+	
+	/* Queue task to balance the file */
+	ReplicationTask_t task;
+	replication_task_init(&task);
+	task.opcode = REP_OP_BALANCE_FILE;
+	strncpy(task.path, path, PATH_MAX);
+	replication_queue_task(&task, OP_PRI_SYNC_FILE, 1);
+	
+	return res;
+}
+
+int multiplex_rename(const char *oldpath, const char *newpath) {
+	
+	EXLog(FUSE, DBG, "multiplex_rename [%s -> %s]", oldpath, newpath);
+	
+	/* halt replication */
+	replication_halt_replication_of_file(oldpath);
+	replication_halt_replication_of_file(newpath);
+	
+	return volume_rename_path_on_active_volumes(oldpath, newpath);
 }
 
 int multiplex_unlink(const char *path) {
@@ -338,7 +368,9 @@ int multiplex_truncate(const char *path, off_t length) {
 		if (!volume) return -1;
 				
 		volume_full_path_for_raid_path(volume, path, fullpath);
-		return truncate(fullpath, length);
+		int res = truncate(fullpath, length);
+		if (res < 0) res = -errno;
+		return res;
 	} else {
 		/* halt replication of possible background copy */
 		replication_halt_replication_of_file(path);
@@ -346,7 +378,17 @@ int multiplex_truncate(const char *path, off_t length) {
 	
 	/* Otherwise manually truncate it from whichever was modified last */
 	volume_most_recently_modified_instance(path, NULL, fullpath, NULL);
-	return truncate(fullpath, length);
+	int res = truncate(fullpath, length);
+	if (res < 0) res = -errno;
+	
+	/* Queue task to balance the file */
+	ReplicationTask_t task;
+	replication_task_init(&task);
+	task.opcode = REP_OP_BALANCE_FILE;
+	strncpy(task.path, path, PATH_MAX);
+	replication_queue_task(&task, OP_PRI_SYNC_FILE, 1);
+	
+	return res;
 }
 
 int multiplex_utimens(const char *path, const struct timespec tv[2]) {

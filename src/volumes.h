@@ -122,6 +122,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 
 int volume_statvfs(const char *path, struct statvfs *statbuf);
 
+int volume_rename_path_on_active_volumes(const char *oldpath, const char *newpath);
 int volume_unlink_path_from_active_volumes(const char *relative_raid_path);
 int volume_access_path_from_active_volumes(const char *relative_raid_path, int amode);
 int volume_rmdir_path_from_active_volumes(const char *relative_raid_path);

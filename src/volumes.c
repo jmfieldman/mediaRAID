@@ -405,6 +405,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	
 	VolumeNode_t *most_recent_volume = NULL;
 	time_t        most_recent_time   = -1;
+	int           err_resp           = -1;
 	
 	while (volume) {
 		/* Go through all volumes and find the volume w/ the latest modification date */
@@ -421,6 +422,8 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 					memcpy(stbuf, &tmp_stbuf, sizeof(struct stat));
 				}
 			}
+		} else {
+			err_resp = -errno;
 		}
 		
 		volume = volume->next;
@@ -430,7 +433,7 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 	if (most_recent_time == -1) {
 		pthread_mutex_unlock(&volume_list_mutex);
 		EXLog(VOLUME, DBG, " > stat failed with [%d]", errno);
-		return -1;
+		return err_resp;
 	}
 	
 	/* Otherwise, set data */
@@ -455,6 +458,8 @@ int volume_statvfs(const char *relative_raid_path, struct statvfs *statbuf) {
 		if (!ret) {
 			pthread_mutex_unlock(&volume_list_mutex);
 			return ret;
+		} else {
+			master_ret = -errno;
 		}
 		
 		volume = volume->next;
@@ -462,6 +467,35 @@ int volume_statvfs(const char *relative_raid_path, struct statvfs *statbuf) {
 	
 	pthread_mutex_unlock(&volume_list_mutex);
 	return master_ret;
+}
+
+int volume_rename_path_on_active_volumes(const char *oldpath, const char *newpath) {
+	
+	/* TODO: This is not an ideal solution; but it will work for now */
+	/*       It would be best to rename one at a time, and if there is a success, go back and unlink only the newpath on volumes w/ rename failure */
+	/*       Right now we'll just unlink everything in newpath first */
+
+	volume_unlink_path_from_active_volumes(newpath);
+	
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char oldfullpath[PATH_MAX];
+		char newfullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, oldpath, oldfullpath);
+		volume_full_path_for_raid_path(volume->volume, newpath, newfullpath);
+		
+		int ret = rename(oldfullpath, newfullpath);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return (master_ret == 0) ? 0 : -errno;	
 }
 
 int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
@@ -481,7 +515,7 @@ int volume_unlink_path_from_active_volumes(const char *relative_raid_path) {
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_access_path_from_active_volumes(const char *relative_raid_path, int amode) {
@@ -498,6 +532,8 @@ int volume_access_path_from_active_volumes(const char *relative_raid_path, int a
 		if (!ret) {
 			pthread_mutex_unlock(&volume_list_mutex);
 			return 0;
+		} else {
+			master_ret = -errno;
 		}
 		
 		volume = volume->next;
@@ -524,7 +560,7 @@ int volume_rmdir_path_from_active_volumes(const char *relative_raid_path) {
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t mode) {
@@ -544,7 +580,7 @@ int volume_mkdir_path_on_active_volumes(const char *relative_raid_path, mode_t m
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t uid, gid_t gid) {
@@ -564,7 +600,7 @@ int volume_chown_path_on_active_volumes(const char *relative_raid_path, uid_t ui
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t mode) {
@@ -584,7 +620,7 @@ int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t m
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_utimens_path_on_active_volumes(const char *relative_raid_path, const struct timespec tv[2]) {
@@ -609,7 +645,7 @@ int volume_utimens_path_on_active_volumes(const char *relative_raid_path, const 
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_setxattr_path_on_active_volumes(const char *relative_raid_path, const char *name, const char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
@@ -629,7 +665,7 @@ int volume_setxattr_path_on_active_volumes(const char *relative_raid_path, const
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const char *name, char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
@@ -650,6 +686,8 @@ int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const
 			EXLog(FUSE, DBG, "   > %s", value);
 			pthread_mutex_unlock(&volume_list_mutex);
 			return ret;
+		} else {
+			master_ret = -errno;
 		}
 		
 		volume = volume->next;
@@ -664,6 +702,7 @@ int volume_listxattr_path_on_active_volumes(const char *relative_raid_path, char
 	
 	VolumeNode_t *volume = active_volumes;
 	int master_ret = -1;
+	int err_resp   = -1;
 	while (volume) {
 		
 		char fullpath[PATH_MAX];
@@ -675,13 +714,15 @@ int volume_listxattr_path_on_active_volumes(const char *relative_raid_path, char
 			return ret;
 		} else if (ret == 0) {
 			master_ret = 0;
+		} else {
+			err_resp = -errno;
 		}
 		
 		volume = volume->next;
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : err_resp;
 }
 
 int volume_removexattr_path_on_active_volumes(const char *relative_raid_path, const char *name) {
@@ -701,7 +742,7 @@ int volume_removexattr_path_on_active_volumes(const char *relative_raid_path, co
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return master_ret;
+	return (master_ret == 0) ? 0 : -errno;
 }
 
 
