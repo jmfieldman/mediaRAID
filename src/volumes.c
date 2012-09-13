@@ -13,6 +13,7 @@
 #include <libgen.h>
 #include <limits.h>
 #include <errno.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
 #include <dirent.h>
@@ -531,6 +532,31 @@ int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t m
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
 		
 		int ret = chmod(fullpath, mode);
+		if (!ret) master_ret = 0;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	return master_ret;
+}
+
+int volume_utimens_path_on_active_volumes(const char *relative_raid_path, const struct timespec tv[2]) {
+	
+	struct timeval utv[2];
+	utv[0].tv_sec = tv[0].tv_sec; utv[0].tv_usec = tv[0].tv_nsec / 1000;
+	utv[1].tv_sec = tv[1].tv_sec; utv[1].tv_usec = tv[1].tv_nsec / 1000;
+	
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -1;
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		int ret = utimes(fullpath, utv);
 		if (!ret) master_ret = 0;
 		
 		volume = volume->next;

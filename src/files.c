@@ -15,7 +15,6 @@
 static Dictionary_t *open_files;
 pthread_mutex_t open_files_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
 void init_open_fh_table() {
 	open_files = dictionary_create_with_size(512);
 }

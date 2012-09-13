@@ -37,6 +37,7 @@ struct fuse_operations fuse_oper_struct = {
 	.chmod     = multiplex_chmod,
 	.chown     = multiplex_chown,
 	.truncate  = multiplex_truncate,
+	.utimens   = multiplex_utimens,
 };
 
 
@@ -182,7 +183,7 @@ int multiplex_open(const char *path, struct fuse_file_info *fi) {
 		fi->fh = fh;
 		return 0;
 	}
-	
+		
 	/* Otherwise get the most recently modified version */
 	char fullpath[PATH_MAX];
 	RaidVolume_t *volume;
@@ -198,8 +199,11 @@ int multiplex_open(const char *path, struct fuse_file_info *fi) {
 	if (fh >= 0) {
 		/* Open was successful, let's put it in the hash */
 		set_open_fh_for_path(path, fh, volume->basepath);
+		
+		/* If we're opening the file, then halt replication */
+		replication_halt_replication_of_file(path);
 	}
-	
+			
 	return 0;
 }
 
@@ -246,6 +250,9 @@ int multiplex_unlink(const char *path) {
 	
 	EXLog(FUSE, DBG, "multiplex_unlink [%s]", path);
 	
+	/* halt replication */
+	replication_halt_replication_of_file(path);
+	
 	/* We have a helper for this */
 	return volume_unlink_path_from_active_volumes(path);
 }
@@ -270,6 +277,9 @@ int multiplex_chmod(const char *path, mode_t mode) {
 
 	EXLog(FUSE, DBG, "multiplex_chmod [%s]", path);
 	
+	/* halt replication */
+	replication_halt_replication_of_file(path);
+	
 	/* We have a helper for this */
 	return volume_chmod_path_on_active_volumes(path, mode);
 }
@@ -277,6 +287,9 @@ int multiplex_chmod(const char *path, mode_t mode) {
 int multiplex_chown(const char *path, uid_t uid, gid_t gid) {
 
 	EXLog(FUSE, DBG, "multiplex_chown [%s]", path);
+	
+	/* halt replication */
+	replication_halt_replication_of_file(path);
 	
 	/* We have a helper for this */
 	return volume_chown_path_on_active_volumes(path, uid, gid);
@@ -301,10 +314,25 @@ int multiplex_truncate(const char *path, off_t length) {
 				
 		volume_full_path_for_raid_path(volume, path, fullpath);
 		return truncate(fullpath, length);
+	} else {
+		/* halt replication of possible background copy */
+		replication_halt_replication_of_file(path);
 	}
 	
 	/* Otherwise manually truncate it from whichever was modified last */
 	volume_most_recently_modified_instance(path, NULL, fullpath, NULL);
 	return truncate(fullpath, length);
 }
+
+int multiplex_utimens(const char *path, const struct timespec tv[2]) {
+	
+	EXLog(FUSE, DBG, "multiplex_utimens [%s]", path);
+	
+	/* halt replication */
+	replication_halt_replication_of_file(path);
+	
+	/* We have a helper for this */
+	return volume_utimens_path_on_active_volumes(path, tv);
+}
+
 

@@ -34,6 +34,22 @@ void replication_task_init(ReplicationTask_t *task) {
 	task->volume_basepath[0] = 0;
 }
 
+/* ------------------------- Replication Interruption ----------------------------- */
+
+static volatile int           s_replication_halt_replication_of_file = 0;
+static char                   s_replication_halt_replication_of_file_path[PATH_MAX];
+static char                   s_replication_currently_replicating_file[PATH_MAX];
+static pthread_mutex_t        s_replication_halt_replication_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void replication_halt_replication_of_file(const char *path) {
+	pthread_mutex_lock(&s_replication_halt_replication_mutex);
+	if (strncmp(path, s_replication_currently_replicating_file, PATH_MAX)) {
+		strncpy(s_replication_halt_replication_of_file_path, path, PATH_MAX);
+		s_replication_halt_replication_of_file = 1;
+	}
+	pthread_mutex_unlock(&s_replication_halt_replication_mutex);	
+}
+
 /* ------------------------- Replication Settings --------------------------------- */
 
 void replication_set_min_redundancy_count(int min_redundancy) {
@@ -82,15 +98,24 @@ void replication_queue_task(ReplicationTask_t *task, OperationPriority_t priorit
 
 /* ---------------------------- Replication Helpers ---------------------------------- */
 
+/* Add a REP_OP_VERIFY_VOLUME_DIRS task for a given volume */
+static inline void __replication_queue_volume_check(RaidVolume_t *volume) {
+	ReplicationTask_t task;
+	replication_task_init(&task);
+	task.opcode = REP_OP_VERIFY_VOLUME_DIRS;
+	strncpy(task.volume_basepath, volume->basepath, PATH_MAX);
+	replication_queue_task(&task, OP_PRI_CRITICAL, 1);
+}
+
 /* For regular file, we're going to:
  * Find file with latest modified time
  * copy it to work directory on target
  * move it to proper raid location
  * update file times to match original
  */
-int __replication_copy_regular_file(const char *relative_path, RaidVolume_t *to_vol) {
+static int __replication_copy_regular_file(const char *relative_path, RaidVolume_t *to_vol) {
 	
-	EXLog(REPL, DBG, "__replication_copy_regular_file [%s | %s]", relative_path, to_vol->basepath);
+	EXLog(REPL, DBG, " > __replication_copy_regular_file [%s > %s]", relative_path, to_vol->basepath);
 	
 	RaidVolume_t *from_vol;
 	char fullpath_from[PATH_MAX];
@@ -99,14 +124,15 @@ int __replication_copy_regular_file(const char *relative_path, RaidVolume_t *to_
 	/* Find volume w/ latest modified time */
 	int not_found = volume_most_recently_modified_instance(relative_path, &from_vol, fullpath_from, &stbuf);
 	if (not_found || ((stbuf.st_mode & S_IFMT) != S_IFREG)) {
-		EXLog(REPL, DBG, "FUCK 0");
+		EXLog(REPL, DBG, "   > Path is not a regular file");
 		return 0;
 	}
 	
 	/* Get target work path */
 	char workpath[PATH_MAX];
 	if (!volume_avaialble_work_path(to_vol, workpath)) {
-		EXLog(REPL, DBG, "FUCK 1");
+		EXLog(REPL, DBG, "   > Volume does not have an available work path");
+		__replication_queue_volume_check(to_vol);
 		return 0;
 	}
 	
@@ -116,14 +142,16 @@ int __replication_copy_regular_file(const char *relative_path, RaidVolume_t *to_
 	
 	int from_fd = open(fullpath_from, O_RDONLY | O_SHLOCK);
 	if (from_fd < 0) {
-		EXLog(REPL, DBG, "FUCK 2");
+		EXLog(REPL, DBG, "   > Could not open path for reading [%s]", fullpath_from);
+		__replication_queue_volume_check(from_vol);
 		return 0;
 	}
 	
 	int to_fd = open(workpath, O_CREAT | O_WRONLY | O_APPEND, stbuf.st_mode);
 	if (to_fd < 0) {
 		close(from_fd);
-		EXLog(REPL, DBG, "FUCK 3 %s", workpath);
+		EXLog(REPL, DBG, "   > Could not open path for writing [%s]", workpath);
+		__replication_queue_volume_check(to_vol);
 		return 0;
 	}
 
@@ -135,6 +163,8 @@ int __replication_copy_regular_file(const char *relative_path, RaidVolume_t *to_
 			close(from_fd);
 			close(to_fd);
 			unlink(workpath);
+			EXLog(REPL, DBG, "   > Read error on path [%s]", fullpath_from);
+			__replication_queue_volume_check(from_vol);
 			return 0;
 		}
 		
@@ -158,12 +188,29 @@ int __replication_copy_regular_file(const char *relative_path, RaidVolume_t *to_
 		ssize_t bytes_left = bytes_read;
 		char *bufptr = copy_buffer;
 		while (bytes_left) {
+			/* Check for halting */
+			if (s_replication_halt_replication_of_file) {
+				s_replication_halt_replication_of_file = 0;
+				pthread_mutex_lock(&s_replication_halt_replication_mutex);
+				if (!strncmp(s_replication_halt_replication_of_file_path, relative_path, PATH_MAX)) {
+					/* Shut it down! */
+					pthread_mutex_unlock(&s_replication_halt_replication_mutex);
+					close(from_fd);
+					close(to_fd);
+					EXLog(REPL, DBG, "   > Shutting down because path [%s] was opened by the OS", workpath);
+					return 0;
+				}
+				pthread_mutex_unlock(&s_replication_halt_replication_mutex);
+			}
+			
 			ssize_t bytes_written = write(to_fd, bufptr, (size_t)bytes_left);
 			if (bytes_written < 0) {
 				/* Shut it all down! */
 				close(from_fd);
 				close(to_fd);
 				unlink(workpath);
+				EXLog(REPL, DBG, "   > Write error on path [%s]", workpath);
+				__replication_queue_volume_check(to_vol);
 				return 0;
 			}
 			
@@ -194,11 +241,13 @@ void replication_task_mirror_directory(ReplicationTask_t *task) {
 	
 	/* If this isn't a directory, just exit */
 	if (!mode_conflict && (mode & S_IFMT) != S_IFDIR) {
+		EXLog(REPL, DBG, " > Path is not a directory");
 		return;
 	}
 	
 	/* Conflict?  Resolve */
 	if (mode_conflict) {
+		EXLog(REPL, DBG, " > Detected mode conflicts");
 		volume_resolve_conflicting_modes(task->path);
 		
 		/* Perform diagnostics on the path again */
@@ -206,12 +255,14 @@ void replication_task_mirror_directory(ReplicationTask_t *task) {
 		
 		/* If this isn't a directory, just exit */
 		if (!mode_conflict && (mode & S_IFMT) != S_IFDIR) {
+			EXLog(REPL, DBG, " > Path is not a directory [after conflict resolution]");
 			return;
 		}
 	}
 	
 	/* Absences? Make directories */
 	if (absences) {
+		EXLog(REPL, DBG, " > Absences found; mirroring");
 		volume_mkdir_path_on_active_volumes(task->path, (mode & 0xFFFF) | S_IFDIR);
 	}
 	
@@ -311,6 +362,7 @@ void replication_task_balance_files_in_dir(ReplicationTask_t *task) {
 							replication_queue_task(&child_task, OP_PRI_SYNC_FILE, 1);
 						} else {
 							/* Conflict? Resolve it */
+							EXLog(REPL, DBG, " > Conflict detected on file [%s]", child_task.path);
 							volume_resolve_conflicting_modes(child_task.path);
 							saw_conflict = 1;
 						}
@@ -329,6 +381,7 @@ void replication_task_balance_files_in_dir(ReplicationTask_t *task) {
 	
 	/* Now, did we see a conflict?  If so, re-queue the current tast */
 	if (saw_conflict) {
+		EXLog(REPL, DBG, " > Conflicts detected; restarting sync");
 		replication_queue_task(task, OP_PRI_SYNC_FILE, 1);
 		return;
 	}
@@ -380,6 +433,17 @@ void replication_task_balance_file(ReplicationTask_t *task) {
 	/* Sanity */
 	if (!task->path) return;
 
+	/* Indicate that this is the file we're replicating */
+	pthread_mutex_lock(&s_replication_halt_replication_mutex);
+	strncpy(s_replication_currently_replicating_file, task->path, PATH_MAX);
+	pthread_mutex_unlock(&s_replication_halt_replication_mutex);
+	
+	/* Check if the file is open.  If so, we're not going to mess with it yet */
+	if (get_open_fh_for_path(task->path, NULL, NULL)) {
+		EXLog(REPL, DBG, " > File is open; skipping");
+		return;
+	}
+	
 	/* Update volume counters */
 	volume_update_all_byte_counters();
 	
@@ -396,24 +460,21 @@ void replication_task_balance_file(ReplicationTask_t *task) {
 		
 	volume_diagnose_raid_file_posession(task->path, &instances, &absences, &mode, &mode_conflict, &poss_volume_less_aff, fullpath_to_poss, &unpo_volume_most_aff, fullpath_to_unpo);
 	if (mode_conflict) {
-		EXLog(REPL, DBG, "EA0");
 		volume_resolve_conflicting_modes(task->path);
-		EXLog(REPL, DBG, "EA1");
+		EXLog(REPL, DBG, " > File [%s] had a mode conflict", task->path);
 		return;
 	}
 	
 	/* If there are no absences, or we're at the proper instance level, we're done already */
 	if (!absences || (instances == s_replication_min_redundancy)) {
-		EXLog(REPL, DBG, "EB0");
 		return;
 	}
 	
 	/* If instances is more than our required redundancy, remove the file if the least-aff volume is above a certain threshold */
 	if (instances > s_replication_min_redundancy) {
-		EXLog(REPL, DBG, "EC0");
 		if (poss_volume_less_aff->percent_free < s_replication_overredundant_perc_thresh) {
-			EXLog(REPL, DBG, "EC1");
 			unlink(fullpath_to_poss);
+			EXLog(REPL, DBG, " > File [%s] was removed from [%s] - too many instances", task->path, poss_volume_less_aff->basepath);
 			return;
 		}
 	}

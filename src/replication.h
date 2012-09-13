@@ -51,6 +51,10 @@ typedef struct {
 } ReplicationTask_t;
 
 
+/* -------------- Halting --------------- */
+
+void replication_halt_replication_of_file(const char *path);
+
 /* -------------- Settings -------------- */
 
 void replication_set_min_redundancy_count(int min_redundancy);

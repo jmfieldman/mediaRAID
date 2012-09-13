@@ -180,7 +180,7 @@ int dictionary_get_int(Dictionary_t *dic, const char *key, int64_t *value) {
 	struct dic_node *np;
 	for (np = dic->buckets[hash_str(key, dic->bucket_count)]; np != NULL; np = np->next) {
 		if (strcmp(key, np->key) == 0) {
-			*value = np->int_value;
+			if (value) *value = np->int_value;
 			pthread_mutex_unlock(&dic->mutex);
 			return 1; /* found */
 		}
@@ -208,7 +208,7 @@ int dictionary_get_int_str(Dictionary_t *dic, const char *key, int64_t *int_valu
 	struct dic_node *np;
 	for (np = dic->buckets[hash_str(key, dic->bucket_count)]; np != NULL; np = np->next) {
 		if (strcmp(key, np->key) == 0) {
-			*int_value = np->int_value;
+			if (int_value) *int_value = np->int_value;
 			if (str_value) strcpy(str_value, np->str_value);
 			pthread_mutex_unlock(&dic->mutex);
 			return 1; /* found */
