@@ -709,41 +709,24 @@ int volume_setxattr_path_on_active_volumes(const char *relative_raid_path, const
 	pthread_mutex_lock(&volume_list_mutex);
 	
 	VolumeNode_t *volume = active_volumes;
-	int master_ret = -1;
+	int master_ret = -EACCES;
+	struct stat stbuf;
+	
 	while (volume) {
 		
 		char fullpath[PATH_MAX];
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
 		
-		int ret = setxattr(fullpath, name, value, size __APPLE_XATTR_POSITION_P__ , options);
-		if (!ret) master_ret = 0;
-		
-		volume = volume->next;
-	}
-	
-	pthread_mutex_unlock(&volume_list_mutex);
-	return (master_ret == 0) ? 0 : -errno;
-}
+		/* If no file exists, do not attempt */
+		if (stat(fullpath, &stbuf)) {
+			volume = volume->next;
+			continue;
+		}
 
-int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const char *name, char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
-	pthread_mutex_lock(&volume_list_mutex);
-	
-	VolumeNode_t *volume = active_volumes;
-	int master_ret = -1;
-	while (volume) {
-		
-		char fullpath[PATH_MAX];
-		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
-		
-		int ret = (int)getxattr(fullpath, name, value, (ssize_t)size __APPLE_XATTR_POSITION_P2__ );
-		
-		EXLog(FUSE, DBG, " > getxattr [%d] [%s]", ret, fullpath);
-		
-		if (ret >= 0) {
-			//EXLog(FUSE, DBG, "   > %s", value);
-			pthread_mutex_unlock(&volume_list_mutex);
-			return ret;
-		} else {
+		int ret = setxattr(fullpath, name, value, size __APPLE_XATTR_POSITION_P__ , options);
+		if (!ret) {
+			master_ret = 0;
+		} else if (master_ret) {
 			master_ret = -errno;
 		}
 		
@@ -754,16 +737,62 @@ int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const
 	return master_ret;
 }
 
-int volume_listxattr_path_on_active_volumes(const char *relative_raid_path, char *name, size_t size) {
+int volume_getxattr_path_on_active_volumes(const char *relative_raid_path, const char *name, char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
 	pthread_mutex_lock(&volume_list_mutex);
 	
 	VolumeNode_t *volume = active_volumes;
-	int master_ret = -1;
-	int err_resp   = -1;
+	int master_ret = -EACCES;
+	struct stat stbuf;
+	
 	while (volume) {
 		
 		char fullpath[PATH_MAX];
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		/* If no file exists, do not attempt */
+		if (stat(fullpath, &stbuf)) {
+			volume = volume->next;
+			continue;
+		}
+		
+		int ret = (int)getxattr(fullpath, name, value, (ssize_t)size __APPLE_XATTR_POSITION_P2__ );
+		
+		EXLog(FUSE, DBG, " > getxattr [%d] [%s]", ret, fullpath);
+		
+		if (ret >= 0) {
+			//EXLog(FUSE, DBG, "   > %s", value);
+			pthread_mutex_unlock(&volume_list_mutex);
+			EXLog(FUSE, DBG, "    > returned %d", ret);
+			return ret;
+		} else {
+			master_ret = -errno;
+		}
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
+	EXLog(FUSE, DBG, "    > returned %d", master_ret);
+	return master_ret;
+}
+
+int volume_listxattr_path_on_active_volumes(const char *relative_raid_path, char *name, size_t size) {
+	pthread_mutex_lock(&volume_list_mutex);
+	
+	VolumeNode_t *volume = active_volumes;
+	int master_ret = -EACCES;
+	struct stat stbuf;
+	
+	while (volume) {
+		
+		char fullpath[PATH_MAX];
+		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
+		
+		/* If no file exists, do not attempt */
+		if (stat(fullpath, &stbuf)) {
+			volume = volume->next;
+			continue;
+		}
 		
 		int ret = (int)listxattr(fullpath, name, size __APPLE_XATTR_POSITION_P3__ );
 		if (ret > 0) {
@@ -771,35 +800,47 @@ int volume_listxattr_path_on_active_volumes(const char *relative_raid_path, char
 			return ret;
 		} else if (ret == 0) {
 			master_ret = 0;
-		} else {
-			err_resp = -errno;
+		} else if (master_ret) {
+			master_ret = -errno;
 		}
 		
 		volume = volume->next;
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return (master_ret == 0) ? 0 : err_resp;
+	return master_ret;
 }
 
 int volume_removexattr_path_on_active_volumes(const char *relative_raid_path, const char *name) {
 	pthread_mutex_lock(&volume_list_mutex);
 	
 	VolumeNode_t *volume = active_volumes;
-	int master_ret = -1;
+	int master_ret = -EACCES;
+	struct stat stbuf;
+	
 	while (volume) {
 		
 		char fullpath[PATH_MAX];
 		volume_full_path_for_raid_path(volume->volume, relative_raid_path, fullpath);
 		
+		/* If no file exists, do not attempt */
+		if (stat(fullpath, &stbuf)) {
+			volume = volume->next;
+			continue;
+		}
+		
 		int ret = removexattr(fullpath, name __APPLE_XATTR_POSITION_P3__);
-		if (!ret) master_ret = 0;
+		if (!ret) {
+			master_ret = 0;
+		} else if (master_ret) {
+			master_ret = -errno;
+		}
 		
 		volume = volume->next;
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
-	return (master_ret == 0) ? 0 : -errno;
+	return master_ret;
 }
 
 

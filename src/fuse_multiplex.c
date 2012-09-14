@@ -180,7 +180,7 @@ int multiplex_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	
 	char fullpath[PATH_MAX];
 	volume_full_path_for_raid_path(volume, path, fullpath);
-	int64_t fh = open(fullpath, O_CREAT | fi->flags, mode);
+	int64_t fh = open(fullpath, O_CREAT | O_TRUNC | O_RDWR, mode);
 	fi->fh = fh;
 	
 	/* Add fh to dictionary */
