@@ -723,7 +723,15 @@ int volume_setxattr_path_on_active_volumes(const char *relative_raid_path, const
 			continue;
 		}
 
+		/* Dunno what the fuck this flag does, but it causes problems */
+		#ifdef __APPLE__
+		if (options & XATTR_NOSECURITY) options -= XATTR_NOSECURITY;
+		#endif
+		
 		int ret = setxattr(fullpath, name, value, size __APPLE_XATTR_POSITION_P__ , options);
+		
+		EXLog(FUSE, DBG, " > setxattr [%d] [%s]", ret, fullpath);
+		
 		if (!ret) {
 			master_ret = 0;
 		} else if (master_ret) {
@@ -734,6 +742,7 @@ int volume_setxattr_path_on_active_volumes(const char *relative_raid_path, const
 	}
 	
 	pthread_mutex_unlock(&volume_list_mutex);
+	EXLog(FUSE, DBG, "    > returned %d", master_ret);
 	return master_ret;
 }
 

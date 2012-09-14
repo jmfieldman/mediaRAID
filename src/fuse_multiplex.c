@@ -404,7 +404,7 @@ int multiplex_utimens(const char *path, const struct timespec tv[2]) {
 
 int multiplex_setxattr(const char *path, const char *name, const char *value, size_t size, int options __APPLE_XATTR_POSITION__ ) {
 
-	EXLog(FUSE, DBG, "multiplex_setxattr [%s | %s]", path, name);
+	EXLog(FUSE, DBG, "multiplex_setxattr [%s | %s | %d | %d]", path, name, options, position);
 	
 	/* halt replication */
 	replication_halt_replication_of_file(path);
