@@ -222,23 +222,6 @@ int httpd_access_handler (void *cls,
 	
 	EXLog(COMM, INFO, "httpd_access_handler [%s:%s]", method, url);
 
-	/*
-	
-	if (*upload_data_size) {
-		EXLog(COMM, DBG, "upload_data [%ld]: %s", *upload_data_size, upload_data);
-	}
-	
-	int params = MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, NULL, NULL);
-	
-	EXLog(COMM, INFO, "httpd_access_handler params [%d]", params);
-	
-	char *val = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "boop");
-	if (val) {
-		EXLog(COMM, INFO, "val = %s", val);
-	}
-	 
-	 */
-
 	#define URL_MATCHES( _u ) !strncasecmp( url, _u , strlen( _u ) + 1)
 	
 	if (URL_MATCHES( "/volume/add" )) {
