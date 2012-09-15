@@ -17,6 +17,7 @@
 #define MRAID_OK                                                      0
 
 #define MRAID_ERR_INVALID_PARAM                                       100
+#define MRAID_ERR_INVALID_OPERATION                                   101
 
 #define MRAID_ERR_VOLUME_ALREADY_EXISTS                               200
 #define MRAID_ERR_VOLUME_ALLOC_ERROR                                  201

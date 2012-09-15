@@ -232,11 +232,7 @@ int httpd_access_handler (void *cls,
 		handle_sync_path_request(connection);
 	} else {
 		EXLog(COMM, DBG, "URL is not a valid command");
-		struct MHD_Response * response;
-		char *response_text = "Invalid Command";
-		response = MHD_create_response_from_data(strlen(response_text), response_text, MHD_NO, MHD_YES);
-		MHD_queue_response(connection, MHD_HTTP_NOT_FOUND, response);
-		MHD_destroy_response(response);
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_INVALID_OPERATION, "sync operation begun"));
 	}
 	
 	
