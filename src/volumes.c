@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include "volumes.h"
 #include "exlog.h"
+#include "replication.h"
 
 // Jannson 2.3.1 fix
 #ifndef json_boolean
@@ -190,7 +191,7 @@ static int count_volumes_in_list_nonatomic(VolumeNode_t *list) {
 static pthread_mutex_t active_switch_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Moves the volume from inactive/active lists, or places it there if not already on the list */
-void set_volume_active(RaidVolume_t *volume, int active) {
+void volume_set_active(RaidVolume_t *volume, int active) {
 	pthread_mutex_lock(&active_switch_mutex);
 	volume->active = active;
 	if (active) {
@@ -242,6 +243,10 @@ RaidVolume_t *create_volume(const char *alias, const char *basepath, const char 
 	RaidVolume_t *volume = (RaidVolume_t*)malloc(sizeof(RaidVolume_t));
 	if (!volume) return NULL;
 	
+	/* Reference counting */
+	volume->reference_count = 1;
+	pthread_mutex_init(&volume->reference_count_mutex, NULL);
+	
 	/* Copy basepath */
 	strncpy(volume->basepath, basepath, PATH_MAX-1);
 	
@@ -275,6 +280,42 @@ RaidVolume_t *create_volume(const char *alias, const char *basepath, const char 
 /* Destroys the volume pointer and anything in the volume struct that was dynamically allocated */
 void destroy_volume_ptr(RaidVolume_t *volume) {
 	free (volume);
+}
+
+void volume_remove(RaidVolume_t *volume) {
+	replication_halt_replication_of_file_emergency();
+	volume_api_lock();
+	
+	RaidVolume_t *v = list_remove_volume(&active_volumes, volume->basepath);
+	if (v) {
+		destroy_volume_ptr(v);
+		volume_api_unlock();
+		return;
+	}
+	
+	v = list_remove_volume(&inactive_volumes, volume->basepath);
+	if (v) destroy_volume_ptr(v);
+	
+	volume_api_unlock();
+}
+
+/* Volume reference counting */
+void volume_retain(RaidVolume_t *volume) {
+	if (!volume) return;
+	pthread_mutex_lock(&volume->reference_count_mutex);
+	volume->reference_count++;
+	pthread_mutex_unlock(&volume->reference_count_mutex);
+}
+
+void volume_release(RaidVolume_t *volume) {
+	if (!volume) return;
+	pthread_mutex_lock(&volume->reference_count_mutex);
+	volume->reference_count--;
+	int ref = volume->reference_count;
+	pthread_mutex_unlock(&volume->reference_count_mutex);
+	if (ref <= 0) {
+		destroy_volume_ptr(volume);
+	}
 }
 
 

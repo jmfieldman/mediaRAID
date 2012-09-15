@@ -53,7 +53,10 @@ typedef struct {
 
 /* -------------- Halting --------------- */
 
+void replication_halt_replication_of_file_emergency(void);
 void replication_halt_replication_of_file(const char *path);
+
+void replication_queue_kill_all_tasks(const char *path_prefix, const char *volume_basepath);
 
 /* -------------- Settings -------------- */
 

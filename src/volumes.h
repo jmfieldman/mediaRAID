@@ -66,8 +66,7 @@ typedef struct {
 	/* The root path to the work files (typically base + directory) */
 	char workpath[PATH_MAX];
 	
-	/* raidpath concatination accelerators */
-	
+	/* raidpath concatination accelerators */	
 	char            concatpath[PATH_MAX];
 	size_t          concatpath_baselen;
 	
@@ -83,6 +82,9 @@ typedef struct {
 	/* Used space in bytes */
 	int64_t capacity_used;
 	
+	/* Reference counting */
+	int             reference_count;
+	pthread_mutex_t reference_count_mutex;
 	
 } RaidVolume_t;
 
@@ -107,7 +109,11 @@ VolumeState_t volume_state_with_alias(const char *alias);
 VolumeState_t volume_state_with_basepath(const char *basepath);
 
 RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath, const char *custom_workpath);
-void set_volume_active(RaidVolume_t *volume, int active);
+void volume_set_active(RaidVolume_t *volume, int active);
+void volume_remove(RaidVolume_t *volume);
+/* Reference counting not used right now */
+/*void volume_retain(RaidVolume_t *volume);*/
+/*void volume_release(RaidVolume_t *volume);*/
 
 const char *volume_full_path_for_raid_path(RaidVolume_t *volume, const char *volume_path, char *buffer);
 const char *volume_full_path_for_trash_path(RaidVolume_t *volume, const char *volume_path, char *buffer);

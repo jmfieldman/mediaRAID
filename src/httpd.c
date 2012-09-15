@@ -136,7 +136,7 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
 	EXLog(COMM, INFO, "add request successful");
 	
 	/* Add volume to list */
-	set_volume_active(volume, 1);
+	volume_set_active(volume, 1);
 	
 	/* Respond */
 	json_t *resp = create_object_with_status(MRAID_OK, "volume added successfully");
@@ -152,6 +152,33 @@ void handle_volume_add_request(struct MHD_Connection *connection) {
  alias: removes the volume with this alias
  */
 void handle_volume_remove_request(struct MHD_Connection *connection) {
+	/* Get arguments */
+	const char *basepath = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "basepath");
+	const char *alias    = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "alias");
+	
+	if (basepath && !strnlen(basepath, PATH_MAX)) basepath = NULL;
+	if (alias    && !strnlen(alias,    PATH_MAX)) alias    = NULL;
+	
+	if (!basepath || !alias) {
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_INVALID_PARAM, "basepath or alias parameter is required"));
+		return;
+	}
+	
+	replication_halt_replication_of_file_emergency();
+	volume_api_lock();
+	
+	RaidVolume_t *volume = volume_with_name(basepath, alias);
+	if (!volume) {
+		volume_api_unlock();
+		send_json_response(connection, MHD_HTTP_OK, create_object_with_status(MRAID_ERR_VOLUME_DOES_NOT_EXIST, "no volume with that basepath/alias exists"));
+		return;
+	}
+	
+	volume_remove(volume);
+	json_t *resp = create_object_with_status(MRAID_OK, "volume removed successfully");
+	send_json_response(connection, MHD_HTTP_OK, resp);
+	
+	volume_api_unlock();
 }
 
 /*

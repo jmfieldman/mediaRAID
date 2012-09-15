@@ -78,8 +78,10 @@ int multiplex_getattr(const char *path, struct stat *stbuf) {
 	int64_t fh;
 	if (get_open_fh_for_path(path, &fh, tmppath)) {
 		/* We should return the stat for the active file */
+		volume_api_lock();
 		RaidVolume_t *active_volume = volume_with_basepath(tmppath);
 		volume_full_path_for_raid_path(active_volume, path, tmppath);
+		volume_api_unlock();
 		if (!stat(tmppath, stbuf)) {
 			return 0;
 		}
@@ -153,13 +155,16 @@ int multiplex_mknod(const char *path, mode_t mode, dev_t dev) {
 	}
 	
 	/* Get the volume with the most free space */
+	volume_api_lock();
 	RaidVolume_t *volume = volume_with_most_bytes_free();
 	if (!volume) {
+		volume_api_unlock();
 		return -ENOENT;
 	}
 	
 	char fullpath[PATH_MAX];
 	volume_full_path_for_raid_path(volume, path, fullpath);
+	volume_api_unlock();
 	return mknod(fullpath, mode, dev);
 }
 
@@ -173,8 +178,10 @@ int multiplex_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	}
 	
 	/* Get the volume with the most free space */
+	volume_api_lock();
 	RaidVolume_t *volume = volume_with_most_bytes_free();
 	if (!volume) {
+		volume_api_unlock();
 		return -ENOENT;
 	}
 	
@@ -187,6 +194,7 @@ int multiplex_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	if (fh >= 0) {
 		set_open_fh_for_path(path, fh, volume->basepath);
 	}
+	volume_api_unlock();
 	
 	return 0;
 }
@@ -205,8 +213,10 @@ int multiplex_open(const char *path, struct fuse_file_info *fi) {
 	/* Otherwise get the most recently modified version */
 	char fullpath[PATH_MAX];
 	RaidVolume_t *volume;
+	volume_api_lock();
 	if (volume_most_recently_modified_instance(path, &volume, fullpath, NULL)) {
 		/* No file found! */
+		volume_api_unlock();
 		return -ENOENT;
 	}
 	
@@ -221,6 +231,7 @@ int multiplex_open(const char *path, struct fuse_file_info *fi) {
 		/* If we're opening the file, then halt replication */
 		replication_halt_replication_of_file(path);
 	}
+	volume_api_unlock();
 			
 	return 0;
 }

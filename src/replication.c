@@ -37,9 +37,17 @@ void replication_task_init(ReplicationTask_t *task) {
 /* ------------------------- Replication Interruption ----------------------------- */
 
 static volatile int           s_replication_halt_replication_of_file = 0;
+static volatile int           s_replication_halt_replication_of_file_emergency = 0;
 static char                   s_replication_halt_replication_of_file_path[PATH_MAX];
 static char                   s_replication_currently_replicating_file[PATH_MAX];
 static pthread_mutex_t        s_replication_halt_replication_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void replication_halt_replication_of_file_emergency() {
+	pthread_mutex_lock(&s_replication_halt_replication_mutex);
+	s_replication_halt_replication_of_file = 1;
+	s_replication_halt_replication_of_file_emergency = 1;
+	pthread_mutex_unlock(&s_replication_halt_replication_mutex);
+}
 
 void replication_halt_replication_of_file(const char *path) {
 	pthread_mutex_lock(&s_replication_halt_replication_mutex);
@@ -93,6 +101,51 @@ void replication_queue_task(ReplicationTask_t *task, OperationPriority_t priorit
 	memcpy(task_to_queue, task, sizeof(ReplicationTask_t));
 	
 	tiered_priority_queue_push(s_replication_queue, priority, front, task_to_queue);
+}
+
+
+int __task_matches_path_prefix_or_basepath(ReplicationTask_t *task, const char *path_prefix, size_t prefix_len, const char *volume_basepath) {
+	if (!task) return 0;
+	if (path_prefix) {
+		if (!memcmp(path_prefix, task->path, prefix_len)) return 1;
+	}
+	if (volume_basepath) {
+		if (!strncmp(volume_basepath, task->volume_basepath, PATH_MAX)) return 1;
+	}
+	return 0;
+}
+
+/* Remove all tasks that act on a path with a prefix, or a specific volume */
+void replication_queue_kill_all_tasks(const char *path_prefix, const char *volume_basepath) {
+	size_t prefix_len = strnlen(path_prefix, PATH_MAX);
+	pthread_mutex_lock(&s_replication_queue->mutex);
+	for (int i = 0; i < TIERED_PRIORITY_QUEUE_LEVELS; i++) {
+		LinkedList_t *list = &s_replication_queue->lists[i];
+		if (!list->front) continue;
+		struct list_node *ptr = list->front;
+		while (__task_matches_path_prefix_or_basepath(ptr->data, path_prefix, prefix_len, volume_basepath)) {
+			list->front = list->front->next;
+			if (ptr == list->back) list->back = list->back->next;
+			free(ptr->data);
+			free(ptr);
+			ptr = list->front;
+		}
+		if (!ptr) continue;
+		while (ptr->next) {
+			if (__task_matches_path_prefix_or_basepath(ptr->next->data, path_prefix, prefix_len, volume_basepath)) {
+				struct list_node *t = ptr->next;
+				ptr->next = ptr->next->next;
+				if (t == list->back) {
+					list->back = ptr;
+				}
+				free(t->data);
+				free(t);
+			} else {
+				ptr = ptr->next;
+			}
+		}
+	}
+	pthread_mutex_unlock(&s_replication_queue->mutex);
 }
 
 
@@ -192,12 +245,17 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 			if (s_replication_halt_replication_of_file) {
 				s_replication_halt_replication_of_file = 0;
 				pthread_mutex_lock(&s_replication_halt_replication_mutex);
-				if (!strncmp(s_replication_halt_replication_of_file_path, relative_path, PATH_MAX)) {
+				if (s_replication_halt_replication_of_file_emergency || !strncmp(s_replication_halt_replication_of_file_path, relative_path, PATH_MAX)) {
 					/* Shut it down! */
 					close(from_fd);
 					close(to_fd);
 					unlink(workpath);
 					EXLog(REPL, DBG, "   > Shutting down because path [%s] was opened by the OS", s_replication_halt_replication_of_file_path);
+					/* On emergency, delay by 1 second for other threads to activate */
+					if (s_replication_halt_replication_of_file_emergency) {
+						s_replication_halt_replication_of_file_emergency = 0;
+						usleep(1000);
+					}
 					pthread_mutex_unlock(&s_replication_halt_replication_mutex);
 					return 0;
 				}
@@ -520,12 +578,14 @@ void *replication_thread(void *arg) {
 				
 		if (next_task) {
 			
+			volume_api_lock();
 			switch (next_task->opcode) {
 				case REP_OP_MIRROR_DIRECTORY:               replication_task_mirror_directory(next_task);                     break;
 				case REP_OP_BALANCE_FILE:                   replication_task_balance_file(next_task);                         break;
 				case REP_OP_BALANCE_FILES_IN_DIR:           replication_task_balance_files_in_dir(next_task);                 break;
 				case REP_OP_VERIFY_VOLUME_DIRS:             replication_task_verify_raid_dir(next_task);                      break;
 			}
+			volume_api_unlock();
 			
 			/* Free the task structure */
 			free(next_task);

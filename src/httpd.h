@@ -20,6 +20,7 @@
 
 #define MRAID_ERR_VOLUME_ALREADY_EXISTS                               200
 #define MRAID_ERR_VOLUME_ALLOC_ERROR                                  201
+#define MRAID_ERR_VOLUME_DOES_NOT_EXIST                               202
 
 /* Start the daemon */
 void start_httpd_daemon(int port);
