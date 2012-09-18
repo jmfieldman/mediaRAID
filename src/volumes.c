@@ -455,8 +455,8 @@ int volume_most_recently_modified_instance(const char *relative_raid_path, RaidV
 
 		int s = stat(fullpath, &tmp_stbuf);
 		if (s == 0) {
-			if (tmp_stbuf.st_mtimespec.tv_sec > most_recent_time) {
-				most_recent_time   = tmp_stbuf.st_mtimespec.tv_sec;
+			if (STAT_MTIME(tmp_stbuf) > most_recent_time) {
+				most_recent_time   = STAT_MTIME(tmp_stbuf);
 				most_recent_volume = volume;
 				if (stbuf) {
 					EXLog(VOLUME, DBG, " > got stat on [%s]", fullpath);
@@ -505,8 +505,8 @@ int volume_kill_aged_instances_of_path(const char *relative_raid_path) {
 		int s = stat(fullpath, &tmp_stbuf);
 		if (s == 0) {
 			instances++;
-			if (tmp_stbuf.st_mtimespec.tv_sec > most_recent_time) {
-				most_recent_time   = tmp_stbuf.st_mtimespec.tv_sec;
+			if (STAT_MTIME(tmp_stbuf) > most_recent_time) {
+				most_recent_time   = STAT_MTIME(tmp_stbuf);
 				most_recent_volume = volume;
 			}
 		}
@@ -529,7 +529,7 @@ int volume_kill_aged_instances_of_path(const char *relative_raid_path) {
 		
 		int s = stat(fullpath, &tmp_stbuf);
 		if (s == 0) {
-			if (tmp_stbuf.st_mtimespec.tv_sec < most_recent_time) {
+			if (STAT_MTIME(tmp_stbuf) < most_recent_time) {
 				unlink(fullpath);
 				EXLog(VOLUME, DBG, " > Unlinked as out of date [%s]", fullpath);
 				killed_instances++;
@@ -972,10 +972,10 @@ void volume_diagnose_raid_file_posession(const char *path,
 			mode_result |= stbuf.st_mode;
 			
 			/* Volume calcs: we want the possessing volume w/ least percent free */
-			if ((poss_volume_with_less_aff_free > volume->volume->percent_free) && (stbuf.st_mtimespec.tv_sec < poss_modified_time)) {
+			if ((poss_volume_with_less_aff_free > volume->volume->percent_free) && (STAT_MTIME(stbuf) < poss_modified_time)) {
 				poss_volume_with_less_aff_free = volume->volume->percent_free;
 				poss_volume_with_less_aff      = volume->volume;
-				poss_modified_time             = stbuf.st_mtimespec.tv_sec;
+				poss_modified_time             = STAT_MTIME(stbuf);
 			}
 		} else {
 			absence_count++;

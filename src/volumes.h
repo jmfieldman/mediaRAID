@@ -31,6 +31,14 @@
 #endif
 #endif
 
+#ifdef __APPLE__
+#define STAT_MTIME( _s ) ( _s.st_mtimespec.tv_sec )
+#define STAT_ATIME( _s ) ( _s.st_atimespec.tv_sec )
+#else
+#define STAT_MTIME( _s ) ( _s.st_mtime )
+#define STAT_ATIME( _s ) ( _s.st_atime )
+#endif
+
 
 /* -------------------- Defines --------------------------- */
 
