@@ -30,9 +30,9 @@
 
 /* ----------------------- File Mode Helpers ----------------------- */
 
-#define NUM_FILE_MODES 8
-static int         s_file_mode_types[NUM_FILE_MODES] = { S_IFIFO, S_IFCHR, S_IFDIR, S_IFBLK, S_IFREG, S_IFLNK, S_IFSOCK, S_IFWHT };
-static const char *s_file_mode_ext[NUM_FILE_MODES]   = { "fifo",  "chr",   "dir",   "blk",   "file",  "lnk",   "sock",   "wht"   };
+#define NUM_FILE_MODES 7
+static int         s_file_mode_types[NUM_FILE_MODES] = { S_IFIFO, S_IFCHR, S_IFDIR, S_IFBLK, S_IFREG, S_IFLNK, S_IFSOCK };
+static const char *s_file_mode_ext[NUM_FILE_MODES]   = { "fifo",  "chr",   "dir",   "blk",   "file",  "lnk",   "sock"   };
 static char       *s_file_conflict_appendix          = ".mediaRAID-conflict";
 
 /* ----------------------- Default directories --------------------- */
