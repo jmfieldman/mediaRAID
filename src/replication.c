@@ -193,7 +193,7 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 	#define REGFILE_COPY_CHUNK_SIZE 32768
 	char copy_buffer[REGFILE_COPY_CHUNK_SIZE];
 	
-	int from_fd = open(fullpath_from, O_RDONLY | O_SHLOCK);
+	int from_fd = open(fullpath_from, O_RDONLY);
 	if (from_fd < 0) {
 		EXLog(REPL, DBG, "   > Could not open path for reading [%s]", fullpath_from);
 		__replication_queue_volume_check(from_vol);

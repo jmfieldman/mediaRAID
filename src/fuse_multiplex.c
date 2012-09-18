@@ -11,6 +11,7 @@
 #include <syslog.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <time.h>
 
 #include "fuse_multiplex.h"
 #include "mediaRAID.h"
