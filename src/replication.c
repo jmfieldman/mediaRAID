@@ -230,8 +230,13 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 			rename(workpath, topath);
 			
 			struct timeval _times[2];
+			#ifdef __APPLE__
 			_times[0].tv_sec = stbuf.st_atimespec.tv_sec; _times[0].tv_usec = 0;
 			_times[1].tv_sec = stbuf.st_mtimespec.tv_sec; _times[1].tv_usec = 0;
+			#else
+			_times[0].tv_sec = stbuf.st_atime; _times[0].tv_usec = 0;
+			_times[1].tv_sec = stbuf.st_mtime; _times[1].tv_usec = 0;
+			#endif
 			
 			utimes(topath, _times);			
 			return 1;
