@@ -1,6 +1,7 @@
 CC=gcc
-CFLAGS= -std=gnu99 -D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse -DFUSE_USE_VERSION=26 -pthread
-LDFLAGS=-L/usr/local/lib -lfuse -lrt -ldl -lmicrohttpd -pthread -ljansson
+DEBUGFLAG=-DEXDEBUGENABLED
+CFLAGS= -std=gnu99 -D_FILE_OFFSET_BITS=64 -I/usr/local/include/fuse -DFUSE_USE_VERSION=26 -pthread $(DEBUGFLAG)
+LDFLAGS=-static -L/usr/local/lib -lfuse -lrt -ldl -lmicrohttpd -pthread -ljansson
 EXECUTABLE=mediaRAIDd
 SRCDIR=../src/
 

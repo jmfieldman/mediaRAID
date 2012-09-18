@@ -16,3 +16,4 @@ profile
 *.o
 nix/mediaRAIDd
 *.swp
+output.log
