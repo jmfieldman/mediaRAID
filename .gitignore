@@ -17,3 +17,4 @@ profile
 nix/mediaRAIDd
 *.swp
 output.log
+DerivedData
