@@ -27,6 +27,7 @@
 		35FBD5B51656DC0400D53A50 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 35FBD5B31656DC0400D53A50 /* MainMenu.xib */; };
 		35FBD5CE1656F19A00D53A50 /* RAIDStatusBarView.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5CC1656ED9900D53A50 /* RAIDStatusBarView.m */; };
 		35FBD5D21656F49E00D53A50 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5D01656F33400D53A50 /* MainWindowController.m */; };
+		35FBD5D816571C3700D53A50 /* MountPointInfoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5D716571C3700D53A50 /* MountPointInfoView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -81,6 +82,8 @@
 		35FBD5CC1656ED9900D53A50 /* RAIDStatusBarView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RAIDStatusBarView.m; sourceTree = "<group>"; };
 		35FBD5CF1656F33400D53A50 /* MainWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainWindowController.h; sourceTree = "<group>"; };
 		35FBD5D01656F33400D53A50 /* MainWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
+		35FBD5D616571C3700D53A50 /* MountPointInfoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MountPointInfoView.h; sourceTree = "<group>"; };
+		35FBD5D716571C3700D53A50 /* MountPointInfoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MountPointInfoView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +239,8 @@
 			children = (
 				35FBD5CB1656ED9900D53A50 /* RAIDStatusBarView.h */,
 				35FBD5CC1656ED9900D53A50 /* RAIDStatusBarView.m */,
+				35FBD5D616571C3700D53A50 /* MountPointInfoView.h */,
+				35FBD5D716571C3700D53A50 /* MountPointInfoView.m */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -342,6 +347,7 @@
 				35FBD5B21656DC0400D53A50 /* AppDelegate.m in Sources */,
 				35FBD5CE1656F19A00D53A50 /* RAIDStatusBarView.m in Sources */,
 				35FBD5D21656F49E00D53A50 /* MainWindowController.m in Sources */,
+				35FBD5D816571C3700D53A50 /* MountPointInfoView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

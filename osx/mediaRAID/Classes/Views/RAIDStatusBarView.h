@@ -13,5 +13,6 @@
 }
 
 @property (nonatomic, assign) NSString *titleText;
+@property (nonatomic, assign) int       yOffset;
 
 @end

@@ -14,8 +14,8 @@
 	[self addStatusBarItem];
 	
 	[self.window setReleasedWhenClosed:NO];
-	[self.window close];
-	
+	//[self.window close];
+	[self.window makeKeyAndOrderFront:self];
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {
@@ -39,7 +39,6 @@
 	[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
 	[self.window makeKeyAndOrderFront:self];
 	
-	NSLog(@"fuck?");
 }
 
 @end
