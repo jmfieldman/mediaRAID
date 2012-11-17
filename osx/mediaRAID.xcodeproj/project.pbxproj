@@ -28,6 +28,19 @@
 		35FBD5CE1656F19A00D53A50 /* RAIDStatusBarView.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5CC1656ED9900D53A50 /* RAIDStatusBarView.m */; };
 		35FBD5D21656F49E00D53A50 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5D01656F33400D53A50 /* MainWindowController.m */; };
 		35FBD5D816571C3700D53A50 /* MountPointInfoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5D716571C3700D53A50 /* MountPointInfoView.m */; };
+		35FBD5E216582DCB00D53A50 /* VolumeTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5E116582DCB00D53A50 /* VolumeTableView.m */; };
+		35FBD5E816583BA500D53A50 /* VolumeTableRowView.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5E716583BA500D53A50 /* VolumeTableRowView.m */; };
+		35FBD5E91658400400D53A50 /* httpd.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC127D15FA56CA00685B10 /* httpd.c */; };
+		35FBD5EA1658400700D53A50 /* files.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC12A215FFBDE000685B10 /* files.c */; };
+		35FBD5EC1658401100D53A50 /* fuse_multiplex.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B20E15F9171E00351928 /* fuse_multiplex.c */; };
+		35FBD5ED1658401100D53A50 /* replication.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC12A51601252900685B10 /* replication.c */; };
+		35FBD5EE1658401100D53A50 /* simplehash.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21115F922A200351928 /* simplehash.c */; };
+		35FBD5EF1658401100D53A50 /* data_structs.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22915FEA0E500351928 /* data_structs.c */; };
+		35FBD5F01658401100D53A50 /* exlog.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21915F945D900351928 /* exlog.c */; };
+		35FBD5F11658401100D53A50 /* volumes.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22115F94B7900351928 /* volumes.c */; };
+		35FBD5F21658402800D53A50 /* libjansson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC128115FA6ECF00685B10 /* libjansson.a */; };
+		35FBD5F31658402C00D53A50 /* libmicrohttpd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */; };
+		35FBD5F41658402F00D53A50 /* libfuse.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3522B20C15F9167F00351928 /* libfuse.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -84,6 +97,10 @@
 		35FBD5D01656F33400D53A50 /* MainWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
 		35FBD5D616571C3700D53A50 /* MountPointInfoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MountPointInfoView.h; sourceTree = "<group>"; };
 		35FBD5D716571C3700D53A50 /* MountPointInfoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MountPointInfoView.m; sourceTree = "<group>"; };
+		35FBD5E016582DCB00D53A50 /* VolumeTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VolumeTableView.h; sourceTree = "<group>"; };
+		35FBD5E116582DCB00D53A50 /* VolumeTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VolumeTableView.m; sourceTree = "<group>"; };
+		35FBD5E616583BA500D53A50 /* VolumeTableRowView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VolumeTableRowView.h; sourceTree = "<group>"; };
+		35FBD5E716583BA500D53A50 /* VolumeTableRowView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VolumeTableRowView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +119,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				35FBD59F1656DC0400D53A50 /* Cocoa.framework in Frameworks */,
+				35FBD5F21658402800D53A50 /* libjansson.a in Frameworks */,
+				35FBD5F31658402C00D53A50 /* libmicrohttpd.a in Frameworks */,
+				35FBD5F41658402F00D53A50 /* libfuse.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,6 +261,10 @@
 				35FBD5CC1656ED9900D53A50 /* RAIDStatusBarView.m */,
 				35FBD5D616571C3700D53A50 /* MountPointInfoView.h */,
 				35FBD5D716571C3700D53A50 /* MountPointInfoView.m */,
+				35FBD5E016582DCB00D53A50 /* VolumeTableView.h */,
+				35FBD5E116582DCB00D53A50 /* VolumeTableView.m */,
+				35FBD5E616583BA500D53A50 /* VolumeTableRowView.h */,
+				35FBD5E716583BA500D53A50 /* VolumeTableRowView.m */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -348,6 +372,16 @@
 				35FBD5CE1656F19A00D53A50 /* RAIDStatusBarView.m in Sources */,
 				35FBD5D21656F49E00D53A50 /* MainWindowController.m in Sources */,
 				35FBD5D816571C3700D53A50 /* MountPointInfoView.m in Sources */,
+				35FBD5E216582DCB00D53A50 /* VolumeTableView.m in Sources */,
+				35FBD5E816583BA500D53A50 /* VolumeTableRowView.m in Sources */,
+				35FBD5E91658400400D53A50 /* httpd.c in Sources */,
+				35FBD5EA1658400700D53A50 /* files.c in Sources */,
+				35FBD5EC1658401100D53A50 /* fuse_multiplex.c in Sources */,
+				35FBD5ED1658401100D53A50 /* replication.c in Sources */,
+				35FBD5EE1658401100D53A50 /* simplehash.c in Sources */,
+				35FBD5EF1658401100D53A50 /* data_structs.c in Sources */,
+				35FBD5F01658401100D53A50 /* exlog.c in Sources */,
+				35FBD5F11658401100D53A50 /* volumes.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,6 +8,7 @@
 
 #import "MainWindowController.h"
 #import "AppDelegate.h"
+#import "VolumeTableRowView.h"
 
 @implementation MainWindowController
 
@@ -28,6 +29,10 @@
 	
 	[_testButton setTarget:self];
 	[_testButton setAction:@selector(performClick:)];
+	
+	_volumeTableView.delegate   = self;
+	_volumeTableView.dataSource = self;
+	[_volumeTableView reloadData];
 }
 
 - (void) performClick:(id)sender {
@@ -48,5 +53,33 @@
 	frameSize.width = 480;
 	return frameSize;
 }
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
+	return 2;
+}
+
+- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+	NSLog(@"VCR %@ %ld", tableColumn, row);
+	
+	VolumeTableRowView *rowView = [[VolumeTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectMake(1,1,1,1))];
+	return rowView;
+	
+	return nil;
+}
+
+/*
+- (NSTableRowView *)tableView:(NSTableView *)tableView rowViewForRow:(NSInteger)row {
+	
+	NSLog(@"row query: %ld", row);
+	
+	VolumeTableRowView *rowView = [[VolumeTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectMake(1,1,1,1))];
+	
+	NSTableRowView *rv = [[NSTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectZero)];
+	return nil;
+	
+	//return nil;
+	return rowView;
+}
+ */
 
 @end

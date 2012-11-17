@@ -10,19 +10,12 @@
 
 @implementation VolumeTableView
 
-- (id)initWithFrame:(NSRect)frame
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        // Initialization code here.
-    }
-    
-    return self;
+- (id)initWithFrame:(NSRect)frame {
+	if ((self = [super initWithFrame:frame])) {
+
+	}
+	return self;
 }
 
-- (void)drawRect:(NSRect)dirtyRect
-{
-    // Drawing code here.
-}
 
 @end

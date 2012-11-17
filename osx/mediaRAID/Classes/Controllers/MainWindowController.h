@@ -9,12 +9,15 @@
 #import <Foundation/Foundation.h>
 #import "RAIDStatusBarView.h"
 #import "MountPointInfoView.h"
+#import "VolumeTableView.h"
 
-@interface MainWindowController : NSObject
+@interface MainWindowController : NSObject <NSTableViewDelegate, NSTableViewDataSource>
 
 @property (strong) IBOutlet RAIDStatusBarView    *raidStatusBar;
 @property (strong) IBOutlet RAIDStatusBarView    *volumeStatusBar;
 @property (strong) IBOutlet MountPointInfoView   *mountPointInfoView;
+@property (strong) IBOutlet VolumeTableView      *volumeTableView;
+
 
 @property (strong) IBOutlet NSButton             *testButton;
 

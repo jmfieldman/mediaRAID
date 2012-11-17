@@ -8,6 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface VolumeTableRowView : NSTableRowView
+@interface VolumeTableRowView : NSView
 
 @end
