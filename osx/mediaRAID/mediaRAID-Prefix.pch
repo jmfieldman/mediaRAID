@@ -4,4 +4,8 @@
 
 #ifdef __OBJC__
 	#import <Cocoa/Cocoa.h>
+
+	#import "exlog.h"
+
+	#import "Notifications.h"
 #endif

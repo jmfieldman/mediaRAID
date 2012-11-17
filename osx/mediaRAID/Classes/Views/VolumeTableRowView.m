@@ -14,26 +14,66 @@
 	if ((self = [super initWithFrame:frame])) {
 
 		
-		NSTextField *_textField = [[NSTextField alloc] initWithFrame:NSRectFromCGRect(CGRectMake(5, 0, 300, 30))];
-		[_textField setEditable:NO];
-		[_textField setSelectable:NO];
-		[_textField setBezeled:NO];
-		[_textField setBordered:NO];
-		[_textField setDrawsBackground:NO];
-		[_textField setFont:[NSFont systemFontOfSize:11]];
-		_textField.stringValue = @"FUCK";
+		_basepathField = [[NSTextField alloc] initWithFrame:NSRectFromCGRect(CGRectMake(5, 0, 300, 30))];
+		[_basepathField setEditable:NO];
+		[_basepathField setSelectable:NO];
+		[_basepathField setBezeled:NO];
+		[_basepathField setBordered:NO];
+		[_basepathField setDrawsBackground:NO];
+		[_basepathField setFont:[NSFont systemFontOfSize:11]];
 		NSShadow *shadow = [[NSShadow alloc] init];
 		shadow.shadowOffset = NSSizeFromCGSize(CGSizeMake(0, 1));
 		shadow.shadowColor = [NSColor colorWithCalibratedWhite:1 alpha:0.75];
 		shadow.shadowBlurRadius = 0;
-		[_textField setShadow:shadow];
-		[self addSubview:_textField];
+		[_basepathField setShadow:shadow];
+		[self addSubview:_basepathField];
 		
+		[self registerForDraggedTypes:@[ NSFilenamesPboardType ]];
 		
 	}
     
 	return self;
 }
+
+
+- (void) setBasepath:(NSString *)basepath {
+	_basepath = basepath;
+	_basepathField.stringValue = basepath;
+}
+
+
+- (NSDragOperation)draggingEntered:(id < NSDraggingInfo >)sender {
+	return NSDragOperationGeneric;
+}
+
+- (void)draggingEnded:(id < NSDraggingInfo >)sender {
+	NSLog(@"DRAG: %@", sender);
+}
+
+- (BOOL)prepareForDragOperation:(id < NSDraggingInfo >)sender {
+	NSLog(@"prepare");
+	return YES;
+}
+
+- (BOOL)performDragOperation:(id < NSDraggingInfo >)sender {
+	NSLog(@"perform pasteboard: %@", sender.draggingPasteboard);
+	
+	NSPasteboard *pboard = [sender draggingPasteboard];
+	
+    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
+		
+        NSArray *paths = [pboard propertyListForType:NSFilenamesPboardType];
+        for (NSString *path in paths) {
+            NSLog(@"PATH: %@", path);
+			
+			NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"basepath"];
+			[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewVolumeNotification object:self userInfo:dic];
+        }
+    }
+	
+	return YES;
+}
+
 
 
 @end

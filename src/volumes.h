@@ -116,6 +116,12 @@ RaidVolume_t *volume_with_name(const char *basepath, const char *alias);
 VolumeState_t volume_state_with_alias(const char *alias);
 VolumeState_t volume_state_with_basepath(const char *basepath);
 
+/* This puts all volume info into the various pointers.  Populate _count parameters with limits */
+void volume_get_all(RaidVolume_t **active, int *active_count, RaidVolume_t **inactive, int *inactive_count);
+
+/* Returns the number of volumes active or inactive */
+int  volume_count(int active);
+
 RaidVolume_t *create_volume(const char *alias, const char *basepath, const char *custom_raidpath, const char *custom_trashpath, const char *custom_workpath);
 void volume_set_active(RaidVolume_t *volume, int active);
 void volume_remove(RaidVolume_t *volume);

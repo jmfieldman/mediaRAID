@@ -8,6 +8,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface VolumeTableRowView : NSView
+@interface VolumeTableRowView : NSView {
+	NSTextField *_basepathField;
+}
+
+@property (nonatomic, strong) NSString *basepath;
 
 @end

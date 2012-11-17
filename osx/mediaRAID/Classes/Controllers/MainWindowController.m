@@ -9,12 +9,15 @@
 #import "MainWindowController.h"
 #import "AppDelegate.h"
 #import "VolumeTableRowView.h"
+#import "volumes.h"
 
 @implementation MainWindowController
 
 - (id) init {
 	if ((self = [super init])) {
-
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewVolume:) name:kRequestNewVolumeNotification object:nil];
+		
 	}
 	return self;
 }
@@ -32,6 +35,7 @@
 	
 	_volumeTableView.delegate   = self;
 	_volumeTableView.dataSource = self;
+	[_volumeTableView registerForDraggedTypes:@[ NSFilenamesPboardType ]];
 	[_volumeTableView reloadData];
 }
 
@@ -55,31 +59,86 @@
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
-	return 2;
+	return volume_count(0) + volume_count(1);
+}
+
+- (void) notificationRequestNewVolume:(NSNotification*)notification {
+	NSString *basepath = [notification.userInfo objectForKey:@"basepath"];
+	const char *path = [basepath UTF8String];
+	NSLog(@"Adding path: %@", basepath);
+	RaidVolume_t *vol = create_volume(path, path, NULL, NULL, NULL);
+	volume_set_active(vol, 1);
+	printf("vol basepath: %s\n", vol->basepath);
+	[_volumeTableView reloadData];
+	NSLog(@"vol count: %d %d", volume_count(0), volume_count(1));
+}
+
+- (void)tableView:(NSTableView *)tableView draggingSession:(NSDraggingSession *)session willBeginAtPoint:(NSPoint)screenPoint forRowIndexes:(NSIndexSet *)rowIndexes {
+	NSLog(@"SHITSHITHSITHISTHSITH");
+}
+
+- (NSDragOperation)tableView:(NSTableView *)aTableView validateDrop:(id < NSDraggingInfo >)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)operation {
+	NSLog(@"SHITSHITHSITHISTHSITH 2");
+	return NSDragOperationCopy;
+}
+
+- (BOOL)tableView:(NSTableView *)aTableView acceptDrop:(id < NSDraggingInfo >)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)operation {
+	NSLog(@"SHITSHITHSITHISTHSITH 3");
+	
+	NSPasteboard *pboard = [info draggingPasteboard];
+	
+    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
+		
+        NSArray *paths = [pboard propertyListForType:NSFilenamesPboardType];
+        for (NSString *path in paths) {
+            NSLog(@"PATH: %@", path);
+			
+			NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"basepath"];
+			[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewVolumeNotification object:self userInfo:dic];
+        }
+    }
+	
+	return YES;
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
-	NSLog(@"VCR %@ %ld", tableColumn, row);
 	
-	VolumeTableRowView *rowView = [[VolumeTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectMake(1,1,1,1))];
+	VolumeTableRowView *rowView = nil;//[tableView makeViewWithIdentifier:tableColumn.identifier owner:self];
+	if (!rowView) {
+		rowView = [[VolumeTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectMake(1,1,1,1))];
+	}
+	
+	RaidVolume_t *actives[256];
+	RaidVolume_t *inactives[256];
+	int active_count = 255;
+	int inactive_count = 255;
+	
+	memset(actives,   0, sizeof(actives));
+	memset(inactives, 0, sizeof(inactives));
+	
+	volume_get_all(actives, &active_count, inactives, &inactive_count);
+	
+	RaidVolume_t *target = NULL;
+	
+	if (active_count > row) {
+		target = actives[row];
+	} else {
+		row -= active_count;
+		target = inactives[row];
+	}
+	
+	if (!target) {
+		//EXLog(VOLUME, ERR, @"Invalid volume row count");
+		return nil;
+	}
+	
+	printf("target bp: %s\n", target->basepath);
+	NSString *bp = [NSString stringWithUTF8String:target->basepath];
+	rowView.basepath = bp;
+	NSLog(@"Set bp: %@", bp);
+	
 	return rowView;
-	
-	return nil;
 }
 
-/*
-- (NSTableRowView *)tableView:(NSTableView *)tableView rowViewForRow:(NSInteger)row {
-	
-	NSLog(@"row query: %ld", row);
-	
-	VolumeTableRowView *rowView = [[VolumeTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectMake(1,1,1,1))];
-	
-	NSTableRowView *rv = [[NSTableRowView alloc] initWithFrame:NSRectFromCGRect(CGRectZero)];
-	return nil;
-	
-	//return nil;
-	return rowView;
-}
- */
 
 @end

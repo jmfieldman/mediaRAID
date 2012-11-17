@@ -186,6 +186,29 @@ static int count_volumes_in_list_nonatomic(VolumeNode_t *list) {
 	return count;
 }
 
+void volume_get_all(RaidVolume_t **active, int *active_count, RaidVolume_t **inactive, int *inactive_count) {
+	pthread_mutex_lock(&volume_list_mutex);
+	VolumeNode_t *node = active_volumes;
+	int max_active = *active_count;
+	*active_count = 0;
+	while (node && (*active_count < max_active)) {
+		*active = node->volume;
+		*active_count = *active_count + 1;
+		active++;
+		node = node->next;
+	}
+	node = inactive_volumes;
+	int max_inactive = *inactive_count;
+	*inactive_count = 0;
+	while (node && (*inactive_count < max_inactive)) {
+		*inactive = node->volume;
+		*inactive_count = *inactive_count + 1;
+		inactive++;
+		node = node->next;
+	}
+	pthread_mutex_unlock(&volume_list_mutex);
+}
+
 /* --------------------- */
 
 static pthread_mutex_t active_switch_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -320,6 +343,14 @@ void volume_release(RaidVolume_t *volume) {
 
 
 /* ----------------------- Volume tools ---------------------------- */
+
+int volume_count(int active) {
+	int response = 0;
+	pthread_mutex_lock(&volume_list_mutex);
+	response = count_volumes_in_list_nonatomic(active ? active_volumes : inactive_volumes);
+	pthread_mutex_unlock(&volume_list_mutex);
+	return response;
+}
 
 RaidVolume_t *volume_with_alias(const char *alias) {
 	if (!alias) return NULL;
