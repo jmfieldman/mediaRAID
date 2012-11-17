@@ -22,6 +22,10 @@
 #include "files.h"
 #include "replication.h"
 
+/* Application options */
+ApplicationOptions_t g_application_options;
+
+
 struct fuse_operations fuse_oper_struct = {
 	.init           = multiplex_init,
 	.getattr        = multiplex_getattr,

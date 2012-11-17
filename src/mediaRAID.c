@@ -14,9 +14,6 @@
 #include "fuse_multiplex.h"
 
 
-/* Application options */
-ApplicationOptions_t g_application_options;
-
 #define CUSTOM_OPT_KEY(t, p, v) { t, offsetof(ApplicationOptions_t, p), v }
 
 static struct fuse_opt app_opts[] =
@@ -25,10 +22,6 @@ static struct fuse_opt app_opts[] =
 	CUSTOM_OPT_KEY("-log %s", log_file, 0),
 	FUSE_OPT_END
 };
-
-
-/* Logging */
-FILE *g_logfile = NULL;
 
 
 /* Main */

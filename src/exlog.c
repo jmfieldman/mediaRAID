@@ -12,6 +12,10 @@
 #include "exlog.h"
 
 
+/* Logging */
+FILE *g_logfile = NULL;
+
+
 #ifdef EXDEBUGENABLED
 
 static double start_time = 0;
