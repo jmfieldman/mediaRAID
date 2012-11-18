@@ -14,7 +14,6 @@
 	[self addStatusBarItem];
 	
 	[self.window setReleasedWhenClosed:NO];
-	//[self.window close];
 	[self.window makeKeyAndOrderFront:self];
 }
 
@@ -27,18 +26,23 @@
 	NSStatusBar *bar = [NSStatusBar systemStatusBar];
 	
 	_statusItem = [bar statusItemWithLength:NSVariableStatusItemLength];
-    [_statusItem setTitle: NSLocalizedString(@"mediaRAID",@"")];
-    [_statusItem setHighlightMode:YES];
+	[_statusItem setImage:[NSImage imageNamed:@"statusbar_off"]];
+	[_statusItem setHighlightMode:YES];
 	
 	[_statusItem setTarget:self];
-	[_statusItem setAction:@selector(fuck)];
+	[_statusItem setAction:@selector(statusBarIconClicked)];
 }
 
-- (void) fuck {
-	//activateIgnoringOtherApps
+- (void) statusBarIconClicked {
 	[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
 	[self.window makeKeyAndOrderFront:self];
 	
+}
+
+/* Hijack the command-Q behavior to just close the window */
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
+	[self.window close];
+	return NSTerminateCancel;
 }
 
 @end

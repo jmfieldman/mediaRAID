@@ -14,6 +14,10 @@
 		3522B21A15F945D900351928 /* exlog.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B21915F945D900351928 /* exlog.c */; };
 		3522B22215F94B7900351928 /* volumes.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22115F94B7900351928 /* volumes.c */; };
 		3522B22A15FEA0E500351928 /* data_structs.c in Sources */ = {isa = PBXBuildFile; fileRef = 3522B22915FEA0E500351928 /* data_structs.c */; };
+		3529A86E1659A2B4002AFAE9 /* statusbar_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 3529A8691659A188002AFAE9 /* statusbar_off.png */; };
+		3529A86F1659A2B4002AFAE9 /* statusbar_off@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3529A86A1659A188002AFAE9 /* statusbar_off@2x.png */; };
+		3529A8701659A2B4002AFAE9 /* statusbar_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 3529A86B1659A188002AFAE9 /* statusbar_on.png */; };
+		3529A8711659A2B4002AFAE9 /* statusbar_on@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3529A86C1659A188002AFAE9 /* statusbar_on@2x.png */; };
 		35AC127E15FA56CA00685B10 /* httpd.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC127D15FA56CA00685B10 /* httpd.c */; };
 		35AC128015FA5D6E00685B10 /* libmicrohttpd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */; };
 		35AC128215FA6ECF00685B10 /* libjansson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC128115FA6ECF00685B10 /* libjansson.a */; };
@@ -71,6 +75,10 @@
 		3522B22115F94B7900351928 /* volumes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volumes.c; sourceTree = "<group>"; };
 		3522B22715FEA0D500351928 /* data_structs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = data_structs.h; sourceTree = "<group>"; };
 		3522B22915FEA0E500351928 /* data_structs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = data_structs.c; sourceTree = "<group>"; };
+		3529A8691659A188002AFAE9 /* statusbar_off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = statusbar_off.png; sourceTree = "<group>"; };
+		3529A86A1659A188002AFAE9 /* statusbar_off@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "statusbar_off@2x.png"; sourceTree = "<group>"; };
+		3529A86B1659A188002AFAE9 /* statusbar_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = statusbar_on.png; sourceTree = "<group>"; };
+		3529A86C1659A188002AFAE9 /* statusbar_on@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "statusbar_on@2x.png"; sourceTree = "<group>"; };
 		35AC127B15FA56B500685B10 /* httpd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = httpd.h; sourceTree = "<group>"; };
 		35AC127D15FA56CA00685B10 /* httpd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = httpd.c; sourceTree = "<group>"; };
 		35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmicrohttpd.a; path = ../../../../../usr/local/lib/libmicrohttpd.a; sourceTree = "<group>"; };
@@ -179,6 +187,17 @@
 			path = ../src;
 			sourceTree = "<group>";
 		};
+		3529A8671659A188002AFAE9 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				3529A8691659A188002AFAE9 /* statusbar_off.png */,
+				3529A86A1659A188002AFAE9 /* statusbar_off@2x.png */,
+				3529A86B1659A188002AFAE9 /* statusbar_on.png */,
+				3529A86C1659A188002AFAE9 /* statusbar_on@2x.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
 		35FBD59D1656DC0400D53A50 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -214,6 +233,7 @@
 		35FBD5A51656DC0400D53A50 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				3529A8671659A188002AFAE9 /* Images */,
 				35FBD5A61656DC0400D53A50 /* mediaRAID-Info.plist */,
 				35FBD5A71656DC0400D53A50 /* InfoPlist.strings */,
 				35FBD5AA1656DC0400D53A50 /* main.m */,
@@ -346,6 +366,10 @@
 				35FBD5A91656DC0400D53A50 /* InfoPlist.strings in Resources */,
 				35FBD5AF1656DC0400D53A50 /* Credits.rtf in Resources */,
 				35FBD5B51656DC0400D53A50 /* MainMenu.xib in Resources */,
+				3529A86E1659A2B4002AFAE9 /* statusbar_off.png in Resources */,
+				3529A86F1659A2B4002AFAE9 /* statusbar_off@2x.png in Resources */,
+				3529A8701659A2B4002AFAE9 /* statusbar_on.png in Resources */,
+				3529A8711659A2B4002AFAE9 /* statusbar_on@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
