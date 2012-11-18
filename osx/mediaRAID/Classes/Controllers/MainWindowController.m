@@ -24,6 +24,7 @@
 
 - (void) awakeFromNib {
 	
+	
 	_raidStatusBar.titleText   = @"Mount Point Information";
 	_raidStatusBar.yOffset     = 60;
 	
@@ -37,7 +38,66 @@
 	_volumeTableView.dataSource = self;
 	[_volumeTableView registerForDraggedTypes:@[ NSFilenamesPboardType ]];
 	[_volumeTableView reloadData];
+	
+	
+	/* Restore existing volumes to the list */
+	[self restoreVolumesFromDefaults];
+	
+	
 }
+
+
+- (void) restoreVolumesFromDefaults {
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	
+	NSArray *volumes = [defaults objectForKey:@"volumes"];
+	if (!volumes) return;
+	
+	for (NSDictionary *volume in volumes) {
+		NSString *basepath = [volume objectForKey:@"basepath"];
+		BOOL active = [[volume objectForKey:@"active"] boolValue];
+
+		const char *charpath = [basepath UTF8String];
+		RaidVolume_t *vol = create_volume(charpath, charpath, NULL, NULL, NULL);
+		volume_set_active(vol, active);
+	}
+	
+	[_volumeTableView reloadData];
+}
+
+- (void) saveVolumesToDefaults {
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	
+	RaidVolume_t *actives[256];
+	RaidVolume_t *inactives[256];
+	int active_count = 255;
+	int inactive_count = 255;
+	
+	memset(actives,   0, sizeof(actives));
+	memset(inactives, 0, sizeof(inactives));
+	
+	volume_get_all(actives, &active_count, inactives, &inactive_count);
+	
+	NSMutableArray *volumes = [NSMutableArray array];
+	
+	for (int i = 0; i < active_count; i++) {
+		NSMutableDictionary *volume = [NSMutableDictionary dictionary];
+		[volume setObject:[NSNumber numberWithBool:YES] forKey:@"active"];
+		[volume setObject:[NSString stringWithUTF8String:actives[i]->basepath] forKey:@"basepath"];
+		[volumes addObject:volume];
+	}
+	
+	for (int i = 0; i < inactive_count; i++) {
+		NSMutableDictionary *volume = [NSMutableDictionary dictionary];
+		[volume setObject:[NSNumber numberWithBool:NO] forKey:@"active"];
+		[volume setObject:[NSString stringWithUTF8String:inactives[i]->basepath] forKey:@"basepath"];
+		[volumes addObject:volume];
+	}
+	
+	[defaults setObject:volumes forKey:@"volumes"];
+	[defaults synchronize];
+}
+
 
 - (void) performClick:(id)sender {
 	NSLog(@"clicked");
@@ -71,6 +131,8 @@
 	printf("vol basepath: %s\n", vol->basepath);
 	[_volumeTableView reloadData];
 	NSLog(@"vol count: %d %d", volume_count(0), volume_count(1));
+	
+	[self saveVolumesToDefaults];
 }
 
 - (void)tableView:(NSTableView *)tableView draggingSession:(NSDraggingSession *)session willBeginAtPoint:(NSPoint)screenPoint forRowIndexes:(NSIndexSet *)rowIndexes {
