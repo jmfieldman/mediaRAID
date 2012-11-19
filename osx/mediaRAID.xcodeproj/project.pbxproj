@@ -48,6 +48,7 @@
 		35FBD5F31658402C00D53A50 /* libmicrohttpd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */; };
 		35FBD5F41658402F00D53A50 /* libfuse.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3522B20C15F9167F00351928 /* libfuse.dylib */; };
 		35FBD5F716584F7B00D53A50 /* Notifications.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5F616584F7B00D53A50 /* Notifications.m */; };
+		35FBD601165AF9E700D53A50 /* FormatHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5FE165AF9E400D53A50 /* FormatHelper.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -118,6 +119,8 @@
 		35FBD5E716583BA500D53A50 /* VolumeTableRowView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VolumeTableRowView.m; sourceTree = "<group>"; };
 		35FBD5F516584F7B00D53A50 /* Notifications.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Notifications.h; sourceTree = "<group>"; };
 		35FBD5F616584F7B00D53A50 /* Notifications.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Notifications.m; sourceTree = "<group>"; };
+		35FBD5FD165AF9E400D53A50 /* FormatHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FormatHelper.h; sourceTree = "<group>"; };
+		35FBD5FE165AF9E400D53A50 /* FormatHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FormatHelper.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,6 +277,8 @@
 			children = (
 				35FBD5F516584F7B00D53A50 /* Notifications.h */,
 				35FBD5F616584F7B00D53A50 /* Notifications.m */,
+				35FBD5FD165AF9E400D53A50 /* FormatHelper.h */,
+				35FBD5FE165AF9E400D53A50 /* FormatHelper.m */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -424,6 +429,7 @@
 				35FBD5F716584F7B00D53A50 /* Notifications.m in Sources */,
 				3529A875165AA0C1002AFAE9 /* HighlightView.m in Sources */,
 				3529A880165ACCC1002AFAE9 /* CleanProgressBar.m in Sources */,
+				35FBD601165AF9E700D53A50 /* FormatHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
