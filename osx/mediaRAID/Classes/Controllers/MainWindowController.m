@@ -36,14 +36,16 @@
 	
 	_volumeTableView.delegate   = self;
 	_volumeTableView.dataSource = self;
-	[_volumeTableView registerForDraggedTypes:@[ NSFilenamesPboardType ]];
 	[_volumeTableView reloadData];
 	
 	
 	/* Restore existing volumes to the list */
 	[self restoreVolumesFromDefaults];
 	
-	
+	/* Attach table highlight view */
+	_volumeTableHighlight = [[HighlightView alloc] initWithFrame:_volumeTableView.frame allowDrag:YES];
+	_volumeTableHighlight.dragTarget = TARGET_VOLUME;
+	[[_volumeTableView superview] addSubview:_volumeTableHighlight];	
 }
 
 
@@ -118,6 +120,10 @@
 	return frameSize;
 }
 
+- (void)windowDidResize:(NSNotification *)notification {
+	_volumeTableHighlight.frame = _volumeTableView.frame;
+}
+
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
 	return volume_count(0) + volume_count(1);
 }
@@ -135,32 +141,10 @@
 	[self saveVolumesToDefaults];
 }
 
-- (void)tableView:(NSTableView *)tableView draggingSession:(NSDraggingSession *)session willBeginAtPoint:(NSPoint)screenPoint forRowIndexes:(NSIndexSet *)rowIndexes {
-	NSLog(@"SHITSHITHSITHISTHSITH");
-}
+#pragma mark NSTableViewDelegate methods
 
-- (NSDragOperation)tableView:(NSTableView *)aTableView validateDrop:(id < NSDraggingInfo >)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)operation {
-	NSLog(@"SHITSHITHSITHISTHSITH 2");
-	return NSDragOperationCopy;
-}
-
-- (BOOL)tableView:(NSTableView *)aTableView acceptDrop:(id < NSDraggingInfo >)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)operation {
-	NSLog(@"SHITSHITHSITHISTHSITH 3");
-	
-	NSPasteboard *pboard = [info draggingPasteboard];
-	
-    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
-		
-        NSArray *paths = [pboard propertyListForType:NSFilenamesPboardType];
-        for (NSString *path in paths) {
-            NSLog(@"PATH: %@", path);
-			
-			NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"basepath"];
-			[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewVolumeNotification object:self userInfo:dic];
-        }
-    }
-	
-	return YES;
+- (BOOL)tableView:(NSTableView *)aTableView shouldSelectRow:(NSInteger)rowIndex {
+	return NO;
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {

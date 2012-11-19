@@ -7,7 +7,10 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "HighlightView.h"
 
 @interface MountPointInfoView : NSView
+
+@property (strong) HighlightView *mountPointHighlight;
 
 @end

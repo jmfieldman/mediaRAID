@@ -10,6 +10,7 @@
 #import "RAIDStatusBarView.h"
 #import "MountPointInfoView.h"
 #import "VolumeTableView.h"
+#import "HighlightView.h"
 
 @interface MainWindowController : NSObject <NSTableViewDelegate, NSTableViewDataSource>
 
@@ -17,6 +18,8 @@
 @property (strong) IBOutlet RAIDStatusBarView    *volumeStatusBar;
 @property (strong) IBOutlet MountPointInfoView   *mountPointInfoView;
 @property (strong) IBOutlet VolumeTableView      *volumeTableView;
+
+@property (strong) HighlightView *volumeTableHighlight;
 
 
 @property (strong) IBOutlet NSButton             *testButton;

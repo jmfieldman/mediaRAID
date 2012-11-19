@@ -28,8 +28,6 @@
 		[_basepathField setShadow:shadow];
 		[self addSubview:_basepathField];
 		
-		[self registerForDraggedTypes:@[ NSFilenamesPboardType ]];
-		
 	}
     
 	return self;
@@ -41,38 +39,6 @@
 	_basepathField.stringValue = basepath;
 }
 
-
-- (NSDragOperation)draggingEntered:(id < NSDraggingInfo >)sender {
-	return NSDragOperationGeneric;
-}
-
-- (void)draggingEnded:(id < NSDraggingInfo >)sender {
-	NSLog(@"DRAG: %@", sender);
-}
-
-- (BOOL)prepareForDragOperation:(id < NSDraggingInfo >)sender {
-	NSLog(@"prepare");
-	return YES;
-}
-
-- (BOOL)performDragOperation:(id < NSDraggingInfo >)sender {
-	NSLog(@"perform pasteboard: %@", sender.draggingPasteboard);
-	
-	NSPasteboard *pboard = [sender draggingPasteboard];
-	
-    if ([[pboard types] containsObject:NSFilenamesPboardType]) {
-		
-        NSArray *paths = [pboard propertyListForType:NSFilenamesPboardType];
-        for (NSString *path in paths) {
-            NSLog(@"PATH: %@", path);
-			
-			NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"basepath"];
-			[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewVolumeNotification object:self userInfo:dic];
-        }
-    }
-	
-	return YES;
-}
 
 
 
