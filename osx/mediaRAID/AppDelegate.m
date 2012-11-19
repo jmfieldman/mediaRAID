@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "volumes.h"
 
 @implementation AppDelegate
 
@@ -15,6 +16,14 @@
 	
 	[self.window setReleasedWhenClosed:NO];
 	[self.window makeKeyAndOrderFront:self];
+	
+	/* Restore window size */
+	NSRect current = self.window.frame;
+	CGFloat ytop = current.origin.y + current.size.height;
+	
+	CGFloat newHeight = [self.windowController windowHeightForVolumeRows:volume_count(0) + volume_count(1)];
+	[self.window setFrame:NSMakeRect(current.origin.x, ytop - newHeight, current.size.width, newHeight ) display:YES];
+
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {

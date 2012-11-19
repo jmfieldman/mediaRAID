@@ -12,6 +12,8 @@
 #import "VolumeTableView.h"
 #import "HighlightView.h"
 
+#define WINDOW_WIDTH 640
+
 @interface MainWindowController : NSObject <NSTableViewDelegate, NSTableViewDataSource>
 
 @property (strong) IBOutlet RAIDStatusBarView    *raidStatusBar;
@@ -24,5 +26,6 @@
 
 @property (strong) IBOutlet NSButton             *testButton;
 
+- (CGFloat) windowHeightForVolumeRows:(int)numrows;
 
 @end

@@ -7,9 +7,11 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "CleanProgressBar.h"
 
 @interface VolumeTableRowView : NSView {
-	NSTextField *_basepathField;
+	NSTextField          *_basepathField;
+	CleanProgressBar     *_freespaceIndicator;
 }
 
 @property (nonatomic, strong) NSString *basepath;

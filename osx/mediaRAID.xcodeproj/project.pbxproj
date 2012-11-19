@@ -19,6 +19,7 @@
 		3529A8701659A2B4002AFAE9 /* statusbar_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 3529A86B1659A188002AFAE9 /* statusbar_on.png */; };
 		3529A8711659A2B4002AFAE9 /* statusbar_on@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3529A86C1659A188002AFAE9 /* statusbar_on@2x.png */; };
 		3529A875165AA0C1002AFAE9 /* HighlightView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3529A873165A9EB8002AFAE9 /* HighlightView.m */; };
+		3529A880165ACCC1002AFAE9 /* CleanProgressBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 3529A87E165ACC34002AFAE9 /* CleanProgressBar.m */; };
 		35AC127E15FA56CA00685B10 /* httpd.c in Sources */ = {isa = PBXBuildFile; fileRef = 35AC127D15FA56CA00685B10 /* httpd.c */; };
 		35AC128015FA5D6E00685B10 /* libmicrohttpd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */; };
 		35AC128215FA6ECF00685B10 /* libjansson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 35AC128115FA6ECF00685B10 /* libjansson.a */; };
@@ -82,6 +83,8 @@
 		3529A86C1659A188002AFAE9 /* statusbar_on@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "statusbar_on@2x.png"; sourceTree = "<group>"; };
 		3529A872165A9EB8002AFAE9 /* HighlightView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HighlightView.h; sourceTree = "<group>"; };
 		3529A873165A9EB8002AFAE9 /* HighlightView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HighlightView.m; sourceTree = "<group>"; };
+		3529A87D165ACC34002AFAE9 /* CleanProgressBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CleanProgressBar.h; sourceTree = "<group>"; };
+		3529A87E165ACC34002AFAE9 /* CleanProgressBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CleanProgressBar.m; sourceTree = "<group>"; };
 		35AC127B15FA56B500685B10 /* httpd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = httpd.h; sourceTree = "<group>"; };
 		35AC127D15FA56CA00685B10 /* httpd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = httpd.c; sourceTree = "<group>"; };
 		35AC127F15FA5D6E00685B10 /* libmicrohttpd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmicrohttpd.a; path = ../../../../../usr/local/lib/libmicrohttpd.a; sourceTree = "<group>"; };
@@ -295,6 +298,8 @@
 				35FBD5E716583BA500D53A50 /* VolumeTableRowView.m */,
 				3529A872165A9EB8002AFAE9 /* HighlightView.h */,
 				3529A873165A9EB8002AFAE9 /* HighlightView.m */,
+				3529A87D165ACC34002AFAE9 /* CleanProgressBar.h */,
+				3529A87E165ACC34002AFAE9 /* CleanProgressBar.m */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -418,6 +423,7 @@
 				35FBD5F11658401100D53A50 /* volumes.c in Sources */,
 				35FBD5F716584F7B00D53A50 /* Notifications.m in Sources */,
 				3529A875165AA0C1002AFAE9 /* HighlightView.m in Sources */,
+				3529A880165ACCC1002AFAE9 /* CleanProgressBar.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

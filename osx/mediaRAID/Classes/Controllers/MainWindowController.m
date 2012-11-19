@@ -24,14 +24,15 @@
 }
 
 - (void) awakeFromNib {
-	
-	
+		
+	/* Setup sizing */
 	_raidStatusBar.titleText   = @"Mount Point Information";
 	_raidStatusBar.yOffset     = 60;
 	
 	_volumeStatusBar.titleText = @"Volume Information";
 	_volumeStatusBar.yOffset   = 60 + 72 + 22;
 		
+	/* Table delegate stuff */
 	_volumeTableView.delegate   = self;
 	_volumeTableView.dataSource = self;
 	[_volumeTableView reloadData];
@@ -140,12 +141,13 @@
 #pragma mark Resizing stuff
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize {
-	frameSize.width = 480;
+	frameSize.width = WINDOW_WIDTH;
 	return frameSize;
 }
 
 - (void)windowDidResize:(NSNotification *)notification {
 	_volumeTableHighlight.frame = _volumeTableView.frame;
+
 }
 
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)window defaultFrame:(NSRect)newFrame {

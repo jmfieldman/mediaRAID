@@ -7,36 +7,43 @@
 //
 
 #import "VolumeTableRowView.h"
+#import "volumes.h"
 
 @implementation VolumeTableRowView
 
 - (id)initWithFrame:(NSRect)frame {
 	if ((self = [super initWithFrame:frame])) {
 
-		
-		_basepathField = [[NSTextField alloc] initWithFrame:NSRectFromCGRect(CGRectMake(5, 0, 300, 30))];
+		_basepathField = [[NSTextField alloc] initWithFrame:NSMakeRect(5, 40, 630, 20)];
 		[_basepathField setEditable:NO];
 		[_basepathField setSelectable:NO];
 		[_basepathField setBezeled:NO];
 		[_basepathField setBordered:NO];
 		[_basepathField setDrawsBackground:NO];
-		[_basepathField setFont:[NSFont systemFontOfSize:11]];
-		NSShadow *shadow = [[NSShadow alloc] init];
-		shadow.shadowOffset = NSSizeFromCGSize(CGSizeMake(0, 1));
-		shadow.shadowColor = [NSColor colorWithCalibratedWhite:1 alpha:0.75];
-		shadow.shadowBlurRadius = 0;
-		[_basepathField setShadow:shadow];
+		[_basepathField setFont:[NSFont systemFontOfSize:14]];
+		[_basepathField setTextColor:[NSColor colorWithCalibratedWhite:0.25 alpha:1]];
+		[_basepathField setBackgroundColor:[NSColor colorWithCalibratedWhite:0.75 alpha:1]];
+		[[_basepathField cell] setLineBreakMode:NSLineBreakByTruncatingHead];
 		[self addSubview:_basepathField];
+		
+		_freespaceIndicator = [[CleanProgressBar alloc] initWithFrame:NSMakeRect(5, 22, 630, 12)];
+		_freespaceIndicator.color = PROGRESS_COLOR_GRAY;
+		[self addSubview:_freespaceIndicator];
 		
 	}
     
 	return self;
 }
 
-
 - (void) setBasepath:(NSString *)basepath {
 	_basepath = basepath;
 	_basepathField.stringValue = basepath;
+	
+	RaidVolume_t *info = volume_with_basepath([basepath UTF8String]);
+	if (!info) return;
+	volume_update_all_byte_counters();
+	
+	_freespaceIndicator.progress = (double)info->capacity_used / (double)info->capacity_total;
 }
 
 
