@@ -13,11 +13,35 @@
 - (id)initWithFrame:(NSRect)frame {
     if ((self = [super initWithFrame:frame])) {
 
+		_mountpathField = [[NSTextField alloc] initWithFrame:NSRectFromCGRect(CGRectMake(5, 0, 300, 30))];
+		[_mountpathField setEditable:NO];
+		[_mountpathField setSelectable:NO];
+		[_mountpathField setBezeled:NO];
+		[_mountpathField setBordered:NO];
+		[_mountpathField setDrawsBackground:NO];
+		[_mountpathField setFont:[NSFont systemFontOfSize:11]];
+		NSShadow *shadow = [[NSShadow alloc] init];
+		shadow.shadowOffset = NSSizeFromCGSize(CGSizeMake(0, 1));
+		shadow.shadowColor = [NSColor colorWithCalibratedWhite:1 alpha:0.75];
+		shadow.shadowBlurRadius = 0;
+		[_mountpathField setShadow:shadow];
+		[self addSubview:_mountpathField];
+		
 		_mountPointHighlight = [[HighlightView alloc] initWithFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height) allowDrag:YES];
 		_mountPointHighlight.dragTarget = TARGET_MOUNT;
 		[self addSubview:_mountPointHighlight];
 	}
 	return self;
+}
+
+- (void) setMountpath:(NSString *)mountpath {
+	if (!mountpath) mountpath = @"";
+	_mountpathField.stringValue = mountpath;
+}
+
+- (NSString*) mountpath {
+	if (![_mountpathField.stringValue length]) return nil;
+	return _mountpathField.stringValue;
 }
 
 - (void) awakeFromNib {

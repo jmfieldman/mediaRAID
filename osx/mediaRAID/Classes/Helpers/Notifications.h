@@ -9,3 +9,4 @@
 #import <Foundation/Foundation.h>
 
 #define kRequestNewVolumeNotification @"kRequestNewVolumeNotification"
+#define kRequestNewMountNotification  @"kRequestNewMountNotification"

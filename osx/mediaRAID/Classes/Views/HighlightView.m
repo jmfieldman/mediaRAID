@@ -74,6 +74,9 @@
 			if (_dragTarget == TARGET_VOLUME) {
 				NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"basepath"];
 				[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewVolumeNotification object:self userInfo:dic];
+			} else if (_dragTarget == TARGET_MOUNT) {
+				NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"mountpath"];
+				[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewMountNotification object:self userInfo:dic];
 			}
 			
         }

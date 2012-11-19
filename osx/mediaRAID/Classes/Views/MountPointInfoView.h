@@ -9,8 +9,11 @@
 #import <Cocoa/Cocoa.h>
 #import "HighlightView.h"
 
-@interface MountPointInfoView : NSView
+@interface MountPointInfoView : NSView {
+	NSTextField *_mountpathField;
+}
 
-@property (strong) HighlightView *mountPointHighlight;
+@property (strong) HighlightView   *mountPointHighlight;
+@property (strong) NSString        *mountpath;
 
 @end

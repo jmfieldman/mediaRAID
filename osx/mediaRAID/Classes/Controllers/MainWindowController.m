@@ -17,6 +17,7 @@
 	if ((self = [super init])) {
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewVolume:) name:kRequestNewVolumeNotification object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewMount:)  name:kRequestNewMountNotification  object:nil];
 		
 	}
 	return self;
@@ -30,14 +31,13 @@
 	
 	_volumeStatusBar.titleText = @"Volume Information";
 	_volumeStatusBar.yOffset   = 60 + 72 + 22;
-	
-	[_testButton setTarget:self];
-	[_testButton setAction:@selector(performClick:)];
-	
+		
 	_volumeTableView.delegate   = self;
 	_volumeTableView.dataSource = self;
 	[_volumeTableView reloadData];
 	
+	/* Set the default mount path */
+	_mountPointInfoView.mountpath = [self savedMountPoint];
 	
 	/* Restore existing volumes to the list */
 	[self restoreVolumesFromDefaults];
@@ -48,6 +48,7 @@
 	[[_volumeTableView superview] addSubview:_volumeTableHighlight];	
 }
 
+#pragma mark Volume stuff
 
 - (void) restoreVolumesFromDefaults {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -100,34 +101,6 @@
 	[defaults synchronize];
 }
 
-
-- (void) performClick:(id)sender {
-	NSLog(@"clicked");
-	
-	AppDelegate *d = [NSApplication sharedApplication].delegate;
-	NSRect foo = NSRectFromCGRect(CGRectMake(d.window.frame.origin.x, d.window.frame.origin.y, 500, 500));
-	//foo = NSRectFromCGRect(CGRectMake(100, 100, 500, 500));
-	
-	NSRect oldFrame = d.window.frame;
-	oldFrame.origin.y += 1;
-	
-	[d.window setFrame:foo display:NO];
-	
-}
-
-- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize {
-	frameSize.width = 480;
-	return frameSize;
-}
-
-- (void)windowDidResize:(NSNotification *)notification {
-	_volumeTableHighlight.frame = _volumeTableView.frame;
-}
-
-- (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
-	return volume_count(0) + volume_count(1);
-}
-
 - (void) notificationRequestNewVolume:(NSNotification*)notification {
 	NSString *basepath = [notification.userInfo objectForKey:@"basepath"];
 	const char *path = [basepath UTF8String];
@@ -141,7 +114,67 @@
 	[self saveVolumesToDefaults];
 }
 
+
+#pragma mark Mount Point stuff
+
+- (NSString*) savedMountPoint {
+	NSUserDefaults *def = [NSUserDefaults standardUserDefaults];
+	return [def stringForKey:@"mountpath"];
+}
+
+- (void) setSavedMountPoint:(NSString*)mountpath {
+	NSUserDefaults *def = [NSUserDefaults standardUserDefaults];
+	[def setObject:mountpath forKey:@"mountpath"];
+}
+
+- (void) notificationRequestNewMount:(NSNotification*)notification {
+	NSString *mountpath = [notification.userInfo objectForKey:@"mountpath"];
+	//const char *path = [mountpath UTF8String];
+	NSLog(@"New mount: %@", mountpath);
+
+	[self setSavedMountPoint:mountpath];
+	_mountPointInfoView.mountpath = mountpath;
+}
+
+
+#pragma mark Resizing stuff
+
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize {
+	frameSize.width = 480;
+	return frameSize;
+}
+
+- (void)windowDidResize:(NSNotification *)notification {
+	_volumeTableHighlight.frame = _volumeTableView.frame;
+}
+
+- (NSRect)windowWillUseStandardFrame:(NSWindow *)window defaultFrame:(NSRect)newFrame {
+	NSLog(@"new frame");
+	
+	NSRect current = window.frame;
+	CGFloat ytop = current.origin.y + current.size.height;
+	
+	CGFloat newHeight = [self windowHeightForVolumeRows:volume_count(0) + volume_count(1)];
+	if (newHeight > newFrame.size.height) newHeight = newFrame.size.height;
+	NSRect resFrame = NSMakeRect(current.origin.x, ytop - newHeight, current.size.width, newHeight );
+	
+	return resFrame;
+}
+
+- (BOOL)windowShouldZoom:(NSWindow *)window toFrame:(NSRect)newFrame {
+	NSLog(@"should zoom");
+	return YES;
+}
+
+- (CGFloat) windowHeightForVolumeRows:(int)numrows {
+	return (numrows * 65) + (22 * 3) + 72 + 68;
+}
+
 #pragma mark NSTableViewDelegate methods
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
+	return volume_count(0) + volume_count(1);
+}
 
 - (BOOL)tableView:(NSTableView *)aTableView shouldSelectRow:(NSInteger)rowIndex {
 	return NO;
