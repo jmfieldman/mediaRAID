@@ -11,6 +11,7 @@
 
 @interface MountPointInfoView : NSView {
 	NSTextField *_mountpathField;
+	NSTextField *_mountpathUsage;
 }
 
 @property (strong) HighlightView   *mountPointHighlight;

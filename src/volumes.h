@@ -42,6 +42,12 @@
 
 /* -------------------- Defines --------------------------- */
 
+#define VOLUME_STATUS_MAXLEN 512
+
+#define VOLUME_UPDATE_REPLICATION_STATUS_STRING( _vol, _fmt, _fmtargs... )  if (_vol) { do { \
+snprintf(_vol->replication_status_string, VOLUME_STATUS_MAXLEN, _fmt, ##_fmtargs );    \
+} while (0); }
+
 typedef enum {
 	VOLUME_DNE      = 0,
 	VOLUME_ACTIVE   = 1,
@@ -93,6 +99,9 @@ typedef struct {
 	/* Reference counting */
 	int             reference_count;
 	pthread_mutex_t reference_count_mutex;
+	
+	/* Volume status */
+	char replication_status_string[VOLUME_STATUS_MAXLEN];
 	
 } RaidVolume_t;
 
@@ -158,6 +167,7 @@ int volume_removexattr_path_on_active_volumes(const char *path, const char *name
 
 void volume_update_all_byte_counters();
 RaidVolume_t *volume_with_most_bytes_free();
+void volume_get_raid_counters(int64_t *total_bytes, int64_t *used_bytes);
 
 /* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */
 void volume_diagnose_raid_file_posession(const char *path,

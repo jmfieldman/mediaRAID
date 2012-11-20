@@ -17,6 +17,8 @@
 #include <sys/types.h>
 #include <sys/statvfs.h>
 #include <sys/xattr.h>
+#include <sys/param.h>
+#include <sys/mount.h>
 #include <dirent.h>
 #include <unistd.h>
 #include "volumes.h"
@@ -42,7 +44,7 @@ static char s_default_trashdir[PATH_MAX] = "/.mediaRAID-trash";
 static char s_default_workdir[PATH_MAX]  = "/.mediaRAID-work";
 
 void set_default_raiddir(char *raiddir) {
-	strncpy(s_default_raiddir, raiddir, PATH_MAX-1);
+	strncpy(s_default_raiddir, raiddir, PATH_MAX-1);	
 }
 
 void set_default_trashdir(char *trashdir) {
@@ -296,6 +298,9 @@ RaidVolume_t *create_volume(const char *alias, const char *basepath, const char 
 	/* Update byte counters */
 	update_volume_byte_counters(volume);
 	
+	/* Set volume status */
+	VOLUME_UPDATE_REPLICATION_STATUS_STRING(volume, "Idle");
+	
 	/* Done */
 	return volume;
 }
@@ -415,7 +420,6 @@ const char *volume_full_path_for_work_path(RaidVolume_t *volume, const char *vol
 	snprintf(buffer, PATH_MAX-1, "%s%s", volume->workpath, volume_path );
 	return buffer;
 }
-
 
 int volume_avaialble_work_path(RaidVolume_t *volume, char *buffer) {
 	int attempt = 0;
@@ -958,6 +962,52 @@ RaidVolume_t *volume_with_most_bytes_free() {
 	
 	pthread_mutex_unlock(&volume_list_mutex);
 	return response;
+}
+
+/* Adds to counters only for unique filesystems */
+void volume_get_raid_counters(int64_t *total_bytes, int64_t *used_bytes) {
+	pthread_mutex_lock(&volume_list_mutex);
+	VolumeNode_t *volume = active_volumes;
+	
+	*total_bytes = 0;
+	*used_bytes  = 0;
+	
+	const int max_fsids = 256;
+	int num_fsids = 0;
+	
+	fsid_t fsids[max_fsids];
+	struct statfs sfs;
+	
+	while (volume) {
+		
+		statfs(volume->volume->basepath, &sfs);
+		
+		int ignore_volume = 0;
+		for (int i = 0; i < num_fsids; i++) {
+			if (!memcmp(&sfs.f_fsid, &fsids[i], sizeof(fsid_t))) {
+				ignore_volume = 1;
+				break;
+			}
+		}
+		
+		if (ignore_volume) {
+			volume = volume->next;
+			continue;
+		}
+		
+		update_volume_byte_counters(volume->volume);
+		*total_bytes = *total_bytes + volume->volume->capacity_total;
+		*used_bytes  = *used_bytes  + volume->volume->capacity_used;
+		
+		memcpy(&fsids[num_fsids], &sfs.f_fsid, sizeof(fsid_t));
+		num_fsids++;
+		
+		if (num_fsids == max_fsids) break;
+		
+		volume = volume->next;
+	}
+	
+	pthread_mutex_unlock(&volume_list_mutex);
 }
 
 /* All arguments aside from path should be pre-allocated buffers for return values, or NULL if you don't care */

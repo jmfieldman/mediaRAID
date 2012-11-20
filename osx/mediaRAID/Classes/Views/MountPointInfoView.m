@@ -7,6 +7,7 @@
 //
 
 #import "MountPointInfoView.h"
+#import "volumes.h"
 
 @implementation MountPointInfoView
 
@@ -20,12 +21,16 @@
 		[_mountpathField setBordered:NO];
 		[_mountpathField setDrawsBackground:NO];
 		[_mountpathField setFont:[NSFont systemFontOfSize:11]];
-		NSShadow *shadow = [[NSShadow alloc] init];
-		shadow.shadowOffset = NSSizeFromCGSize(CGSizeMake(0, 1));
-		shadow.shadowColor = [NSColor colorWithCalibratedWhite:1 alpha:0.75];
-		shadow.shadowBlurRadius = 0;
-		[_mountpathField setShadow:shadow];
 		[self addSubview:_mountpathField];
+		
+		_mountpathUsage = [[NSTextField alloc] initWithFrame:NSRectFromCGRect(CGRectMake(5, 30, 300, 30))];
+		[_mountpathUsage setEditable:NO];
+		[_mountpathUsage setSelectable:NO];
+		[_mountpathUsage setBezeled:NO];
+		[_mountpathUsage setBordered:NO];
+		[_mountpathUsage setDrawsBackground:NO];
+		[_mountpathUsage setFont:[NSFont systemFontOfSize:11]];
+		[self addSubview:_mountpathUsage];
 		
 		_mountPointHighlight = [[HighlightView alloc] initWithFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height) allowDrag:YES];
 		_mountPointHighlight.dragTarget = TARGET_MOUNT;
@@ -58,6 +63,10 @@
 	f.size.width = oldBoundsSize.width;
 	f.origin.y = oldBoundsSize.height - (60 + 72);
 	self.frame = f;
+	
+	int64_t t, u;
+	volume_get_raid_counters(&t, &u);
+	_mountpathUsage.stringValue = [NSString stringWithFormat:@"%lld %lld", t, u];
 }
 
 

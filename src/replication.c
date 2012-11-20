@@ -208,6 +208,9 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 		return 0;
 	}
 
+	VOLUME_UPDATE_REPLICATION_STATUS_STRING(from_vol, "Reading %s", relative_path);
+	VOLUME_UPDATE_REPLICATION_STATUS_STRING(to_vol,   "Writing %s", relative_path);
+	
 	/* Both files are open */
 	while (1) {
 		ssize_t bytes_read = read(from_fd, copy_buffer, (size_t)REGFILE_COPY_CHUNK_SIZE);
@@ -218,6 +221,8 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 			unlink(workpath);
 			EXLog(REPL, DBG, "   > Read error on path [%s]", fullpath_from);
 			__replication_queue_volume_check(from_vol);
+			VOLUME_UPDATE_REPLICATION_STATUS_STRING(from_vol, "Idle");
+			VOLUME_UPDATE_REPLICATION_STATUS_STRING(to_vol,   "Idle");
 			return 0;
 		}
 		
@@ -238,7 +243,9 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 			_times[1].tv_sec = stbuf.st_mtime; _times[1].tv_usec = 0;
 			#endif
 			
-			utimes(topath, _times);			
+			utimes(topath, _times);
+			VOLUME_UPDATE_REPLICATION_STATUS_STRING(from_vol, "Idle");
+			VOLUME_UPDATE_REPLICATION_STATUS_STRING(to_vol,   "Idle");
 			return 1;
 		}
 		
@@ -262,6 +269,8 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 						usleep(1000);
 					}
 					pthread_mutex_unlock(&s_replication_halt_replication_mutex);
+					VOLUME_UPDATE_REPLICATION_STATUS_STRING(from_vol, "Idle");
+					VOLUME_UPDATE_REPLICATION_STATUS_STRING(to_vol,   "Idle");
 					return 0;
 				}
 				pthread_mutex_unlock(&s_replication_halt_replication_mutex);
@@ -275,6 +284,8 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 				unlink(workpath);
 				EXLog(REPL, DBG, "   > Write error on path [%s]", workpath);
 				__replication_queue_volume_check(to_vol);
+				VOLUME_UPDATE_REPLICATION_STATUS_STRING(from_vol, "Idle");
+				VOLUME_UPDATE_REPLICATION_STATUS_STRING(to_vol,   "Idle");
 				return 0;
 			}
 			
@@ -284,6 +295,8 @@ static int __replication_copy_regular_file(const char *relative_path, RaidVolume
 		}		
 	}
 	
+	VOLUME_UPDATE_REPLICATION_STATUS_STRING(from_vol, "Idle");
+	VOLUME_UPDATE_REPLICATION_STATUS_STRING(to_vol,   "Idle");
 	return 0;
 }
 

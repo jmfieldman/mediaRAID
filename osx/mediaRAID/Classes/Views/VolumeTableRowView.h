@@ -12,6 +12,7 @@
 @interface VolumeTableRowView : NSView {
 	NSTextField          *_basepathField;
 	NSTextField          *_usageField;
+	NSTextField          *_replicationStatusField;
 	CleanProgressBar     *_freespaceIndicator;
 }
 
