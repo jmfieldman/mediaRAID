@@ -49,6 +49,7 @@
 		35FBD5F41658402F00D53A50 /* libfuse.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3522B20C15F9167F00351928 /* libfuse.dylib */; };
 		35FBD5F716584F7B00D53A50 /* Notifications.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5F616584F7B00D53A50 /* Notifications.m */; };
 		35FBD601165AF9E700D53A50 /* FormatHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD5FE165AF9E400D53A50 /* FormatHelper.m */; };
+		35FBD60A165B328B00D53A50 /* notif.c in Sources */ = {isa = PBXBuildFile; fileRef = 35FBD609165B328B00D53A50 /* notif.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -121,6 +122,8 @@
 		35FBD5F616584F7B00D53A50 /* Notifications.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Notifications.m; sourceTree = "<group>"; };
 		35FBD5FD165AF9E400D53A50 /* FormatHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FormatHelper.h; sourceTree = "<group>"; };
 		35FBD5FE165AF9E400D53A50 /* FormatHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FormatHelper.m; sourceTree = "<group>"; };
+		35FBD609165B328B00D53A50 /* notif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = notif.c; sourceTree = "<group>"; };
+		35FBD60C165B32A300D53A50 /* notif.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = notif.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -191,6 +194,8 @@
 				35AC12A215FFBDE000685B10 /* files.c */,
 				35AC127B15FA56B500685B10 /* httpd.h */,
 				35AC127D15FA56CA00685B10 /* httpd.c */,
+				35FBD60C165B32A300D53A50 /* notif.h */,
+				35FBD609165B328B00D53A50 /* notif.c */,
 			);
 			name = src;
 			path = ../src;
@@ -404,6 +409,7 @@
 				3522B22A15FEA0E500351928 /* data_structs.c in Sources */,
 				35AC12A315FFBDE000685B10 /* files.c in Sources */,
 				35AC12A61601252A00685B10 /* replication.c in Sources */,
+				35FBD60A165B328B00D53A50 /* notif.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
