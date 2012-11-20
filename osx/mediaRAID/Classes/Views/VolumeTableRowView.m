@@ -76,10 +76,26 @@
 							   [FormatHelper prettyFilesize:info->capacity_free]
 							   ];
 	
-	_replicationStatusField.stringValue = [NSString stringWithFormat:@"Replication status: %s", info->replication_status_string];
+	if (info->active) {
+		_replicationStatusField.stringValue = [NSString stringWithFormat:@"Replication status: %s", info->replication_status_string];
+	} else {
+		_replicationStatusField.stringValue = @"Replication status: Volume inactive";
+	}
 }
 
-
+- (void) setSelected:(BOOL)selected {
+	_selected = selected;
+	if (selected) {
+		[_basepathField          setTextColor:[NSColor colorWithCalibratedWhite:1 alpha:1]];
+		[_usageField             setTextColor:[NSColor colorWithCalibratedWhite:1 alpha:1]];
+		[_replicationStatusField setTextColor:[NSColor colorWithCalibratedWhite:1 alpha:1]];
+	} else {
+		[_basepathField          setTextColor:[NSColor colorWithCalibratedWhite:0.25 alpha:1]];
+		[_usageField             setTextColor:[NSColor colorWithCalibratedWhite:0.25 alpha:1]];
+		[_replicationStatusField setTextColor:[NSColor colorWithCalibratedWhite:0.25 alpha:1]];
+	}
+	
+}
 
 
 @end

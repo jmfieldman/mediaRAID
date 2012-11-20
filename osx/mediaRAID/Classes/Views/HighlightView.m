@@ -71,6 +71,18 @@
         for (NSString *path in paths) {
             NSLog(@"PATH: %@", path);
 			
+			NSFileManager *manager = [NSFileManager defaultManager];
+			BOOL isdir;
+			if (![manager fileExistsAtPath:path isDirectory:&isdir]) {
+				return NO;
+			}
+			
+			if (!isdir) {
+				NSAlert *alert = [NSAlert alertWithMessageText:@"Directories Only" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"You can only drag directories here.  No files allowed."];
+				[alert runModal];
+				return NO;
+			}
+			
 			if (_dragTarget == TARGET_VOLUME) {
 				NSDictionary *dic = [NSDictionary dictionaryWithObject:path forKey:@"basepath"];
 				[[NSNotificationCenter defaultCenter] postNotificationName:kRequestNewVolumeNotification object:self userInfo:dic];

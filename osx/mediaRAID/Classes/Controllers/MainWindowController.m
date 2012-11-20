@@ -179,7 +179,17 @@
 }
 
 - (BOOL)tableView:(NSTableView *)aTableView shouldSelectRow:(NSInteger)rowIndex {
-	return NO;
+	
+	NSInteger lastSelected = [aTableView selectedRow];
+	if (lastSelected >= 0) {
+		VolumeTableRowView *row = [aTableView viewAtColumn:0 row:lastSelected makeIfNecessary:NO];
+		row.selected = NO;
+	}
+	
+	VolumeTableRowView *row = [aTableView viewAtColumn:0 row:rowIndex makeIfNecessary:NO];
+	row.selected = YES;
+	
+	return YES;
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {

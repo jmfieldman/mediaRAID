@@ -17,5 +17,6 @@
 }
 
 @property (nonatomic, strong) NSString *basepath;
+@property (nonatomic, assign) BOOL      selected;
 
 @end

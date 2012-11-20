@@ -33,6 +33,9 @@
 	
 	NSRect b = [self bounds];
 	
+	[[NSColor colorWithCalibratedWhite:1 alpha:1] setFill];
+	NSRectFill(NSMakeRect(0, 0, b.size.width, b.size.height));
+	
 	[[NSColor colorWithCalibratedWhite:0.8 alpha:1] setFill];
 	NSRectFill(NSMakeRect(0, 0, b.size.width, b.size.height/2));
 	
