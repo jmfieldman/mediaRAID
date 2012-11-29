@@ -10,3 +10,7 @@
 
 #define kRequestNewVolumeNotification @"kRequestNewVolumeNotification"
 #define kRequestNewMountNotification  @"kRequestNewMountNotification"
+
+#define kRequestRemoveVolumeNotification     @"kRequestRemoveVolumeNotification"
+#define kRequestDeactivateVolumeNotification @"kRequestDeactivateVolumeNotification"
+#define kRequestActivateVolumeNotification   @"kRequestActivateVolumeNotification"

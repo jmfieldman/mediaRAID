@@ -16,8 +16,11 @@
 - (id) init {
 	if ((self = [super init])) {
 		
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewVolume:) name:kRequestNewVolumeNotification object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewMount:)  name:kRequestNewMountNotification  object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewVolume:)         name:kRequestNewVolumeNotification         object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestNewMount:)          name:kRequestNewMountNotification          object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestRemoveVolume:)      name:kRequestRemoveVolumeNotification      object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestActivateVolume:)    name:kRequestActivateVolumeNotification    object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(notificationRequestDeactivateVolume:)  name:kRequestDeactivateVolumeNotification  object:nil];
 		
 	}
 	return self;
@@ -115,6 +118,48 @@
 	[self saveVolumesToDefaults];
 }
 
+- (void) notificationRequestRemoveVolume:(NSNotification*)notification {
+
+	NSString *basepath = [notification.userInfo objectForKey:@"basepath"];
+	const char *path = [basepath UTF8String];
+	
+	RaidVolume_t *vol = volume_with_basepath(path);
+	if (!vol) return;
+	
+	volume_set_active(vol, NO);
+	volume_remove(vol);
+	
+	[_volumeTableView reloadData];
+	[self saveVolumesToDefaults];
+	
+}
+
+- (void) notificationRequestActivateVolume:(NSNotification*)notification {
+	NSString *basepath = [notification.userInfo objectForKey:@"basepath"];
+	const char *path = [basepath UTF8String];
+	
+	RaidVolume_t *vol = volume_with_basepath(path);
+	if (!vol) return;
+	
+	volume_set_active(vol, YES);
+	
+	[_volumeTableView reloadData];
+	[self saveVolumesToDefaults];
+}
+
+- (void) notificationRequestDeactivateVolume:(NSNotification*)notification {
+	NSString *basepath = [notification.userInfo objectForKey:@"basepath"];
+	const char *path = [basepath UTF8String];
+	
+	RaidVolume_t *vol = volume_with_basepath(path);
+	if (!vol) return;
+	
+	volume_set_active(vol, NO);
+	
+	[_volumeTableView reloadData];
+	[self saveVolumesToDefaults];
+}
+
 
 #pragma mark Mount Point stuff
 
@@ -141,7 +186,12 @@
 #pragma mark Resizing stuff
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize {
+	int rows = volume_count(0) + volume_count(1);
+	if (rows < 1) rows = 1;
+	CGFloat newHeight = [self windowHeightForVolumeRows:rows];
+	
 	frameSize.width = WINDOW_WIDTH;
+	frameSize.height = newHeight;
 	return frameSize;
 }
 
@@ -169,7 +219,7 @@
 }
 
 - (CGFloat) windowHeightForVolumeRows:(int)numrows {
-	return (numrows * 65) + (22 * 3) + 72 + 68;
+	return (numrows * 65) + (22 * 3) + 72 + 66;
 }
 
 #pragma mark NSTableViewDelegate methods
@@ -179,6 +229,8 @@
 }
 
 - (BOOL)tableView:(NSTableView *)aTableView shouldSelectRow:(NSInteger)rowIndex {
+	
+	return NO;
 	
 	NSInteger lastSelected = [aTableView selectedRow];
 	if (lastSelected >= 0) {
@@ -227,6 +279,8 @@
 	NSString *bp = [NSString stringWithUTF8String:target->basepath];
 	rowView.basepath = bp;
 	NSLog(@"Set bp: %@", bp);
+	
+	rowView.selected = NO;
 	
 	return rowView;
 }

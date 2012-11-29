@@ -8,12 +8,20 @@
 
 #import <Cocoa/Cocoa.h>
 #import "CleanProgressBar.h"
+#import "ParentTipButton.h"
 
 @interface VolumeTableRowView : NSView {
 	NSTextField          *_basepathField;
 	NSTextField          *_usageField;
 	NSTextField          *_replicationStatusField;
+	NSTextField          *_buttonTooltipField;
 	CleanProgressBar     *_freespaceIndicator;
+	
+	NSImageView          *_activeImageView;
+	
+	ParentTipButton      *_trashButton;
+	ParentTipButton      *_activateButton;
+	ParentTipButton      *_finderButton;
 }
 
 @property (nonatomic, strong) NSString *basepath;
