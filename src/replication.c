@@ -117,7 +117,10 @@ int __task_matches_path_prefix_or_basepath(ReplicationTask_t *task, const char *
 
 /* Remove all tasks that act on a path with a prefix, or a specific volume */
 void replication_queue_kill_all_tasks(const char *path_prefix, const char *volume_basepath) {
-	size_t prefix_len = strnlen(path_prefix, PATH_MAX);
+	/* Replication inactive, just return */
+	if (!s_replication_queue) return;
+	
+	size_t prefix_len = path_prefix ? strnlen(path_prefix, PATH_MAX) : 0;
 	pthread_mutex_lock(&s_replication_queue->mutex);
 	for (int i = 0; i < TIERED_PRIORITY_QUEUE_LEVELS; i++) {
 		LinkedList_t *list = &s_replication_queue->lists[i];
