@@ -138,9 +138,10 @@ static RaidVolume_t *list_remove_volume(VolumeNode_t **list, const char *basepat
 	/* Others */
 	while (node->next) {
 		if (!strncmp(node->next->volume->basepath, basepath, PATH_MAX)) {
+			VolumeNode_t *oldnode = node->next;
 			volume = node->next->volume;
 			node->next = node->next->next;
-			destroy_volume_node(node->next);
+			destroy_volume_node(oldnode);
 			pthread_mutex_unlock(&volume_list_mutex);
 			return volume;
 		}
@@ -226,6 +227,10 @@ void volume_set_active(RaidVolume_t *volume, int active) {
 			list_add_volume(&active_volumes, volume);
 		}
 	} else {
+		/* Remove replication tasks */
+		replication_queue_kill_all_tasks(NULL, volume->basepath);
+		replication_halt_replication_of_file_emergency();
+		
 		RaidVolume_t *t = list_remove_volume(&active_volumes, volume->basepath);
 		if (t) volume = t;
 		clear_active_volume_counters(volume);
