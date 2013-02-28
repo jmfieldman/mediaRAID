@@ -243,7 +243,7 @@ int multiplex_open(const char *path, struct fuse_file_info *fi) {
 
 int multiplex_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	
-	EXLog(FUSE, DBG, "multiplex_read [%s | %d]", path, (int)size);
+	//EXLog(FUSE, DBG, "multiplex_read [%s | %d]", path, (int)size);
 	
 	/* Assume fh is valid in fi */
 	if (lseek((int)fi->fh, offset, SEEK_SET) < 0) {
@@ -262,7 +262,7 @@ int multiplex_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 int multiplex_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	
-	EXLog(FUSE, DBG, "multiplex_write [%s | %d]", path, (int)size);
+	//EXLog(FUSE, DBG, "multiplex_write [%s | %d]", path, (int)size);
 	
 	/* Assume fh is valid in fi */
 	if (lseek((int)fi->fh, offset, SEEK_SET) < 0) {
