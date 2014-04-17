@@ -620,6 +620,10 @@ void *replication_thread(void *arg) {
 			
 			/* Sleep a second before checking for a non-empty task stack */
 			sleep(1);
+			
+			/* Clear replication halting flags since nothing was running */
+			s_replication_halt_replication_of_file = 0;
+			s_replication_halt_replication_of_file_emergency = 0;
 		}		
 	}
 	

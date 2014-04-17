@@ -764,8 +764,10 @@ int volume_chmod_path_on_active_volumes(const char *relative_raid_path, mode_t m
 int volume_utimens_path_on_active_volumes(const char *relative_raid_path, const struct timespec tv[2]) {
 	
 	struct timeval utv[2];
-	utv[0].tv_sec = tv[0].tv_sec; utv[0].tv_usec = tv[0].tv_nsec / 1000;
-	utv[1].tv_sec = tv[1].tv_sec; utv[1].tv_usec = tv[1].tv_nsec / 1000;
+	utv[0].tv_sec = tv[0].tv_sec;
+	utv[0].tv_usec = (suseconds_t)(tv[0].tv_nsec / 1000);
+	utv[1].tv_sec = tv[1].tv_sec;
+	utv[1].tv_usec = (suseconds_t)(tv[1].tv_nsec / 1000);
 	
 	pthread_mutex_lock(&volume_list_mutex);
 	
