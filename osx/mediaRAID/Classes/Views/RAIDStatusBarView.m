@@ -17,6 +17,7 @@
 
 - (void)resizeWithOldSuperviewSize:(NSSize)oldBoundsSize {
 	NSRect f = self.frame;
+	oldBoundsSize = self.superview.bounds.size;
 	f.size.width = oldBoundsSize.width;
 	f.origin.y = oldBoundsSize.height - _yOffset;
 	self.frame = f;

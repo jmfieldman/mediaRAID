@@ -23,6 +23,10 @@
 	
 	CGFloat newHeight = [self.windowController windowHeightForVolumeRows:volume_count(0) + volume_count(1)];
 	[self.window setFrame:NSMakeRect(current.origin.x, ytop - newHeight, current.size.width, newHeight ) display:YES];
+	
+	NSButton *b = [[NSButton alloc] initWithFrame:NSMakeRect(0, newHeight, 100, 100)];
+
+	[self.window.contentView addSubview:b];
 
 }
 

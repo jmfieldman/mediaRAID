@@ -27,6 +27,7 @@
 }
 
 - (void) awakeFromNib {
+
 		
 	/* Setup sizing */
 	_raidStatusBar.titleText   = @"Mount Point Information";
