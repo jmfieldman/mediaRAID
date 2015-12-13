@@ -22,26 +22,26 @@ func multiplex_operations() -> fuse_operations {
     operations.readdir      = multiplex_readdir
     operations.mknod        = multiplex_mknod
     
-    /*
-.create         = multiplex_create,
-.open           = multiplex_open,
-.read           = multiplex_read,
-.write          = multiplex_write,
-.release        = multiplex_release,
-.rename         = multiplex_rename,
-.unlink         = multiplex_unlink,
-.rmdir          = multiplex_rmdir,
-.mkdir          = multiplex_mkdir,
-.chmod          = multiplex_chmod,
-.chown          = multiplex_chown,
-.access         = multiplex_access,
-.truncate       = multiplex_truncate,
-.utimens        = multiplex_utimens,
-.setxattr       = multiplex_setxattr,
-.getxattr       = multiplex_getxattr,
-.listxattr      = multiplex_listxattr,
-.removexattr    = multiplex_removexattr,
-*/
+    
+operations.create         = multiplex_create
+operations.open           = multiplex_open
+operations.read           = multiplex_read
+operations.write          = multiplex_write
+operations.release        = multiplex_release
+operations.rename         = multiplex_rename
+operations.unlink         = multiplex_unlink
+operations.rmdir          = multiplex_rmdir
+operations.mkdir          = multiplex_mkdir
+operations.chmod          = multiplex_chmod
+operations.chown          = multiplex_chown
+operations.access         = multiplex_access
+operations.truncate       = multiplex_truncate
+operations.utimens        = multiplex_utimens
+operations.setxattr       = multiplex_setxattr
+operations.getxattr       = multiplex_getxattr
+operations.listxattr      = multiplex_listxattr
+operations.removexattr    = multiplex_removexattr
+
 
     return operations
 }
@@ -211,7 +211,7 @@ func multiplex_read(path: UnsafePointer<Int8>, buf: UnsafeMutablePointer<Int8>, 
 }
 
 
-func multiplex_write(path: UnsafePointer<Int8>, buf: UnsafeMutablePointer<Int8>, size: size_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+func multiplex_write(path: UnsafePointer<Int8>, buf: UnsafePointer<Int8>, size: size_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
 	
     let volumeIndex = unsafeBitCast(fuse_get_context().memory.private_data, Int64.self)
     
@@ -420,7 +420,7 @@ func multiplex_utimens(path: UnsafePointer<Int8>, tv: UnsafePointer<timespec>) -
 }
 
 
-func multiplex_setxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, value: UnsafePointer<Int8>, size: size_t, options: Int32) -> Int32 {
+func multiplex_setxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, value: UnsafePointer<Int8>, size: size_t, options: Int32, position: UInt32) -> Int32 {
 	
     let volumeIndex = unsafeBitCast(fuse_get_context().memory.private_data, Int64.self)
     
@@ -434,12 +434,12 @@ func multiplex_setxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, va
         return -1
     }
     
-    return volume.os_setxattr(path, name: name, value: value, size: size, options: options)
+    return volume.os_setxattr(path, name: name, value: value, size: size, options: options, position: position)
     
 }
 
 
-func multiplex_getxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, value: UnsafeMutablePointer<Int8>, size: size_t) -> Int32 {
+func multiplex_getxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, value: UnsafeMutablePointer<Int8>, size: size_t, position: UInt32) -> Int32 {
 	
     let volumeIndex = unsafeBitCast(fuse_get_context().memory.private_data, Int64.self)
     
@@ -453,7 +453,7 @@ func multiplex_getxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, va
         return -1
     }
     
-    return volume.os_getxattr(path, name: name, value: value, size: size)
+    return volume.os_getxattr(path, name: name, value: value, size: size, position: position)
     
 }
 
