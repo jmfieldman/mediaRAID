@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		3572F9F11C1DD4AC0009D98F /* MuxVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */; };
-		3572F9F21C1DD4AC0009D98F /* VolumeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9EE1C1DD4AC0009D98F /* VolumeManager.swift */; };
 		3572F9F31C1DD4AC0009D98F /* FuseMultiplexOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9F01C1DD4AC0009D98F /* FuseMultiplexOperations.swift */; };
+		3572F9F51C1DE1A70009D98F /* MuxSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9F41C1DE1A70009D98F /* MuxSource.swift */; };
 		35DF430F1C1DC77D00D4BB7E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DF430E1C1DC77D00D4BB7E /* AppDelegate.swift */; };
 		35DF43111C1DC77D00D4BB7E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 35DF43101C1DC77D00D4BB7E /* Assets.xcassets */; };
 		35DF43141C1DC77D00D4BB7E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 35DF43121C1DC77D00D4BB7E /* MainMenu.xib */; };
@@ -20,8 +20,8 @@
 /* Begin PBXFileReference section */
 		3572F9D41C1DD26E0009D98F /* bridging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bridging.h; sourceTree = "<group>"; };
 		3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MuxVolume.swift; sourceTree = "<group>"; };
-		3572F9EE1C1DD4AC0009D98F /* VolumeManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VolumeManager.swift; sourceTree = "<group>"; };
 		3572F9F01C1DD4AC0009D98F /* FuseMultiplexOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FuseMultiplexOperations.swift; sourceTree = "<group>"; };
+		3572F9F41C1DE1A70009D98F /* MuxSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MuxSource.swift; sourceTree = "<group>"; };
 		35DF430B1C1DC77D00D4BB7E /* mediaRAID.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mediaRAID.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		35DF430E1C1DC77D00D4BB7E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		35DF43101C1DC77D00D4BB7E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -49,7 +49,7 @@
 			isa = PBXGroup;
 			children = (
 				3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */,
-				3572F9EE1C1DD4AC0009D98F /* VolumeManager.swift */,
+				3572F9F41C1DE1A70009D98F /* MuxSource.swift */,
 			);
 			path = Multiplexer;
 			sourceTree = "<group>";
@@ -243,8 +243,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				35DF431D1C1DD00200D4BB7E /* RootViewController.swift in Sources */,
-				3572F9F21C1DD4AC0009D98F /* VolumeManager.swift in Sources */,
 				3572F9F31C1DD4AC0009D98F /* FuseMultiplexOperations.swift in Sources */,
+				3572F9F51C1DE1A70009D98F /* MuxSource.swift in Sources */,
 				3572F9F11C1DD4AC0009D98F /* MuxVolume.swift in Sources */,
 				35DF430F1C1DC77D00D4BB7E /* AppDelegate.swift in Sources */,
 			);

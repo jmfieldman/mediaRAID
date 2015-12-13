@@ -9,11 +9,40 @@
 import Foundation
 
 
+/**
+The MuxVolume class combines several MuxSources into a single virtual volume
+*/
 class MuxVolume {
-	
+    
+    /* -- Support Mux volume hash -- */
+    private static var _volumeHashQueue  = dispatch_queue_create("mediaRAID.MuxVolume.volumeHashQueue",  DISPATCH_QUEUE_CONCURRENT)
+    private static var _volumeIndexQueue = dispatch_queue_create("mediaRAID.MuxVolume.volumeIndexQueue", DISPATCH_QUEUE_CONCURRENT)
+    
+    private static var _volumeHash: [Int64 : MuxVolume] = [:]
+    private static var _nextVolumeIndex: Int64 = 0
+    
+    
+    let volumeIndex = MuxVolume.nextVolumeIndex()
+    
+    init() {
+        MuxVolume.addVolumeToHash(self)
+    }
+    
+    
+}
 
-	
-	
+
+
+
+
+// MARK: - FUSE Operations
+
+extension MuxVolume {
+    
+	/* ---------------------------------------------------------- */
+	/* -------------------- FUSE OPERATIONS --------------------- */
+    /* ---------------------------------------------------------- */
+    
 	func os_initialize() {
 		
 	}
@@ -126,4 +155,59 @@ class MuxVolume {
         return 0
     }
 
+}
+
+
+
+
+// MARK: - Volume Management
+
+extension MuxVolume {
+    
+    /**
+     Returns the next available unique volume index (thread-safe)
+     
+     - returns: The next available unique volume index
+     */
+    private static func nextVolumeIndex() -> Int64 {
+        var next: Int64!
+        dispatch_sync(_volumeIndexQueue) {
+            next = MuxVolume._nextVolumeIndex
+            MuxVolume._nextVolumeIndex++
+        }
+        return next
+    }
+    
+    /**
+     Inserts the volume at a given index (thread-safe)
+     
+     - parameter volume: The volume to insert
+     - parameter index:  The index to insert the volume
+     */
+    private static func insertVolume(volume: MuxVolume, atIndex index: Int64) {
+        dispatch_barrier_sync(_volumeHashQueue) {
+            MuxVolume._volumeHash[index] = volume
+        }
+    }
+    
+    /**
+     Adds a volume to the mux manager
+     */
+    @inline(__always) private static func addVolumeToHash(newVolume: MuxVolume) {
+        insertVolume(newVolume, atIndex: newVolume.volumeIndex)
+    }
+    
+    /**
+     Returns the volume at the given volume index (thread-safe)
+     
+     - returns: The volume indexed by the given index
+     */
+    @inline(__always) static func volumeAtIndex(index: Int64) -> MuxVolume? {
+        var volume: MuxVolume?
+        dispatch_sync(_volumeHashQueue) {
+            volume = MuxVolume._volumeHash[index]
+        }
+        return volume
+    }
+    
 }

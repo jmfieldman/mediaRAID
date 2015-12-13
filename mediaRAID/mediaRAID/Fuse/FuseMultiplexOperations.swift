@@ -51,7 +51,7 @@ func multiplex_init(conn: UnsafeMutablePointer<fuse_conn_info>) {
 
 	let volumeIndex = unsafeBitCast(fuse_get_context().memory.private_data, Int64.self)
 	
-	guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+	guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
 		return
 	}
 	
@@ -68,7 +68,7 @@ func multiplex_getattr(path: UnsafePointer<Int8>, stbuf: UnsafeMutablePointer<st
 		return -1
 	}
 	
-	guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+	guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
 		errno = ENOENT
 		return -1
 	}
@@ -87,7 +87,7 @@ func multiplex_fgetattr(path: UnsafePointer<Int8>, stbuf: UnsafeMutablePointer<s
 		return -1
 	}
 	
-	guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+	guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
 		errno = ENOENT
 		return -1
 	}
@@ -106,7 +106,7 @@ func multiplex_statfs(path: UnsafePointer<Int8>, statbuf: UnsafeMutablePointer<s
 		return -1
 	}
 	
-	guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+	guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
 		errno = ENOENT
 		return -1
 	}
@@ -125,7 +125,7 @@ func multiplex_readdir(path: UnsafePointer<Int8>, buf: UnsafeMutablePointer<Void
 		return 0
 	}
 	
-	guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+	guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
 		errno = ENOENT
 		return 0
 	}
@@ -144,7 +144,7 @@ func multiplex_mknod(path: UnsafePointer<Int8>, mode: mode_t, dev: dev_t) -> Int
 		return -1
 	}
 	
-	guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+	guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
 		errno = ENOENT
 		return -1
 	}
@@ -163,7 +163,7 @@ func multiplex_create(path: UnsafePointer<Int8>, mode: mode_t, fi: UnsafeMutable
         return -ENOENT
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -ENOENT
     }
@@ -182,7 +182,7 @@ func multiplex_open(path: UnsafePointer<Int8>, fi: UnsafeMutablePointer<fuse_fil
         return -ENOENT
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -ENOENT
     }
@@ -201,7 +201,7 @@ func multiplex_read(path: UnsafePointer<Int8>, buf: UnsafeMutablePointer<Int8>, 
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -220,7 +220,7 @@ func multiplex_write(path: UnsafePointer<Int8>, buf: UnsafePointer<Int8>, size: 
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -239,7 +239,7 @@ func multiplex_release(path: UnsafePointer<Int8>, fi: UnsafeMutablePointer<fuse_
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -258,7 +258,7 @@ func multiplex_rename(oldpath: UnsafePointer<Int8>, newpath: UnsafePointer<Int8>
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -277,7 +277,7 @@ func multiplex_unlink(path: UnsafePointer<Int8>) -> Int32 {
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -296,7 +296,7 @@ func multiplex_access(path: UnsafePointer<Int8>, amode: Int32) -> Int32 {
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -315,7 +315,7 @@ func multiplex_rmdir(path: UnsafePointer<Int8>) -> Int32 {
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -334,7 +334,7 @@ func multiplex_mkdir(path: UnsafePointer<Int8>, mode: mode_t) -> Int32 {
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -353,7 +353,7 @@ func multiplex_chmod(path: UnsafePointer<Int8>, mode: mode_t) -> Int32 {
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -372,7 +372,7 @@ func multiplex_chown(path: UnsafePointer<Int8>, uid: uid_t, gid: gid_t) -> Int32
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -391,7 +391,7 @@ func multiplex_truncate(path: UnsafePointer<Int8>, length: off_t) -> Int32 {
         return -ENOENT
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -ENOENT
     }
@@ -410,7 +410,7 @@ func multiplex_utimens(path: UnsafePointer<Int8>, tv: UnsafePointer<timespec>) -
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = ENOENT
         return -1
     }
@@ -429,7 +429,7 @@ func multiplex_setxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, va
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = EFAULT
         return -1
     }
@@ -448,7 +448,7 @@ func multiplex_getxattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>, va
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = EFAULT
         return -1
     }
@@ -467,7 +467,7 @@ func multiplex_listxattr(path: UnsafePointer<Int8>, namebuf: UnsafeMutablePointe
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = EFAULT
         return -1
     }
@@ -486,7 +486,7 @@ func multiplex_removexattr(path: UnsafePointer<Int8>, name: UnsafePointer<Int8>)
         return -1
     }
     
-    guard let volume = VolumeManager.volumeAtIndex(volumeIndex) else {
+    guard let volume = MuxVolume.volumeAtIndex(volumeIndex) else {
         errno = EFAULT
         return -1
     }
