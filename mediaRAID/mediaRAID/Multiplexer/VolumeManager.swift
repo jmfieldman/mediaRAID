@@ -17,7 +17,11 @@ class VolumeManager {
 	private static var volumeHash: [Int64 : MuxVolume] = [:]
 	private static var _nextVolumeIndex: Int64 = 0
 	
-	
+    /**
+     Returns the next available unique volume index (thread-safe)
+     
+     - returns: The next available unique volume index
+     */
 	private static func nextVolumeIndex() -> Int64 {
 		var next: Int64!
 		dispatch_sync(volumeIndexQueue) {
@@ -27,19 +31,35 @@ class VolumeManager {
 		return next
 	}
 	
+    /**
+     Inserts the volume at a given index (thread-safe)
+     
+     - parameter volume: The volume to insert
+     - parameter index:  The index to insert the volume
+     */
 	private static func insertVolume(volume: MuxVolume, atIndex index: Int64) {
 		dispatch_barrier_sync(volumeHashQueue) {
 			VolumeManager.volumeHash[index] = volume
 		}
 	}
 	
-	static func addVolume(newVolume: MuxVolume) -> Int64 {
+    /**
+     Adds a volume to the mux manager and returns its volume index (thread-safe)
+     
+     - returns: The new index of the volume
+     */
+	@inline(__always) static func addVolume(newVolume: MuxVolume) -> Int64 {
 		let index = nextVolumeIndex()
 		insertVolume(newVolume, atIndex: index)
 		return index
 	}
 	
-	static func volumeAtIndex(index: Int64) -> MuxVolume? {
+    /**
+     Returns the volume at the given volume index (thread-safe)
+     
+     - returns: The volume indexed by the given index
+     */
+	@inline(__always) static func volumeAtIndex(index: Int64) -> MuxVolume? {
 		var volume: MuxVolume?
 		dispatch_sync(volumeHashQueue) {
 			volume = VolumeManager.volumeHash[index]
