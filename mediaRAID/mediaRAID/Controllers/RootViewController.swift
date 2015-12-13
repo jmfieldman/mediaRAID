@@ -24,6 +24,9 @@ class RootViewController : NSViewController {
         let v = MuxVolume()
         v.startFUSE()
         
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(3) * Int64(NSEC_PER_SEC)), dispatch_get_main_queue()) {
+            v.stopFUSE()
+        }
     }
     
     

@@ -76,14 +76,21 @@ func multiplex_operations() -> fuse_operations {
     
 }
 
-var __currentMuxVolumeIndex: UnsafeMutablePointer<Void>!
-var __currentMuxVolumeIndexLock: OSSpinLock = OS_SPINLOCK_INIT
+
+var __currentMuxVolumeIndex:        UnsafeMutablePointer<Void>!
+var __currentMuxVolumeIndexLock:    OSSpinLock = OS_SPINLOCK_INIT
 
 
 func multiplex_init(conn: UnsafeMutablePointer<fuse_conn_info>) -> UnsafeMutablePointer<Void> {
 
-    let index = __currentMuxVolumeIndex
+    let index = __currentMuxVolumeIndex!
+    let volumeIndex = unsafeBitCast(index, UnsafeMutablePointer<Int64>.self).memory
+    
     OSSpinLockUnlock(&__currentMuxVolumeIndexLock)
+    
+    if let volume = MuxVolume.volumeAtIndex(volumeIndex) {
+        volume.os_initialize()
+    }
     
 	return index
 }
