@@ -20,7 +20,9 @@ class RootViewController : NSViewController {
         
         self.attachToMainWindow()
         
-        
+        /* -- Debug -- */
+        let v = MuxVolume()
+        v.startFUSE()
         
     }
     
