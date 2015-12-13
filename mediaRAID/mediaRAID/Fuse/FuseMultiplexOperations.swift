@@ -7,6 +7,44 @@
 //
 
 
+/**
+Create the FUSE operation struct for use with the MuxVolume
+
+- returns: A fuse_operations struct that can be used with the MuxVolume class
+*/
+func multiplex_operations() -> fuse_operations {
+    
+    var operations = fuse_operations()
+    
+    operations.getattr      = multiplex_getattr
+    operations.fgetattr     = multiplex_fgetattr
+    operations.statfs       = multiplex_statfs
+    operations.readdir      = multiplex_readdir
+    operations.mknod        = multiplex_mknod
+    
+    /*
+.create         = multiplex_create,
+.open           = multiplex_open,
+.read           = multiplex_read,
+.write          = multiplex_write,
+.release        = multiplex_release,
+.rename         = multiplex_rename,
+.unlink         = multiplex_unlink,
+.rmdir          = multiplex_rmdir,
+.mkdir          = multiplex_mkdir,
+.chmod          = multiplex_chmod,
+.chown          = multiplex_chown,
+.access         = multiplex_access,
+.truncate       = multiplex_truncate,
+.utimens        = multiplex_utimens,
+.setxattr       = multiplex_setxattr,
+.getxattr       = multiplex_getxattr,
+.listxattr      = multiplex_listxattr,
+.removexattr    = multiplex_removexattr,
+*/
+
+    return operations
+}
 
 
 func multiplex_init(conn: UnsafeMutablePointer<fuse_conn_info>) {
@@ -78,7 +116,7 @@ func multiplex_statfs(path: UnsafePointer<Int8>, statbuf: UnsafeMutablePointer<s
 }
 
 
-func multiplex_readdir(path: UnsafePointer<Int8>, buf: UnsafeMutablePointer<Void>, filler: fuse_fill_dir_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+func multiplex_readdir(path: UnsafePointer<Int8>, buf: UnsafeMutablePointer<Void>, filler: fuse_fill_dir_t!, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
 	
 	let volumeIndex = unsafeBitCast(fuse_get_context().memory.private_data, Int64.self)
 	
