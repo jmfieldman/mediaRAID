@@ -122,33 +122,33 @@ class MuxVolume {
 
 extension MuxVolume {
     
-	/* ---------------------------------------------------------- */
-	/* -------------------- FUSE OPERATIONS --------------------- */
+    /* ---------------------------------------------------------- */
+    /* -------------------- FUSE OPERATIONS --------------------- */
     /* ---------------------------------------------------------- */
     
-	func os_initialize() {
-		__wasFUSEd = true
-	}
-	
-	func os_getattr(path: String, stbuf: UnsafeMutablePointer<stat>) -> Int32 {
-		return 0
-	}
-	
-	func os_fgetattr(path: String, stbuf: UnsafeMutablePointer<stat>, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-		return 0
-	}
-	
-	func os_statfs(path: String, statbuf: UnsafeMutablePointer<statvfs>) -> Int32 {
-		return 0
-	}
-	
-	func os_readdir(path: String, buf: UnsafeMutablePointer<Void>, filler: fuse_fill_dir_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-		return 0
-	}
-	
-	func os_mknod(path: String, mode: mode_t, dev: dev_t) -> Int32 {
-		return 0
-	}
+    func os_initialize() {
+        __wasFUSEd = true
+    }
+    
+    func os_getattr(path: String, stbuf: UnsafeMutablePointer<stat>) -> Int32 {
+        return 0
+    }
+    
+    func os_fgetattr(path: String, stbuf: UnsafeMutablePointer<stat>, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+        return 0
+    }
+    
+    func os_statfs(path: String, statbuf: UnsafeMutablePointer<statvfs>) -> Int32 {
+        return 0
+    }
+    
+    func os_readdir(path: String, buf: UnsafeMutablePointer<Void>, filler: fuse_fill_dir_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+        return 0
+    }
+    
+    func os_mknod(path: String, mode: mode_t, dev: dev_t) -> Int32 {
+        return 0
+    }
     
     func os_create(path: String, mode: mode_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
         return 0
