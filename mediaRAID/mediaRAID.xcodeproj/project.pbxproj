@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		353F3C4D1C2072DE00D33806 /* MuxOpenFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F3C4C1C2072DE00D33806 /* MuxOpenFile.swift */; };
 		3572F9F11C1DD4AC0009D98F /* MuxVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */; };
 		3572F9F31C1DD4AC0009D98F /* FuseMultiplexOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9F01C1DD4AC0009D98F /* FuseMultiplexOperations.swift */; };
 		3572F9F51C1DE1A70009D98F /* MuxSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9F41C1DE1A70009D98F /* MuxSource.swift */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		353F3C4C1C2072DE00D33806 /* MuxOpenFile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MuxOpenFile.swift; sourceTree = "<group>"; };
 		3572F9D41C1DD26E0009D98F /* bridging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bridging.h; sourceTree = "<group>"; };
 		3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MuxVolume.swift; sourceTree = "<group>"; };
 		3572F9F01C1DD4AC0009D98F /* FuseMultiplexOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FuseMultiplexOperations.swift; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 			children = (
 				3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */,
 				3572F9F41C1DE1A70009D98F /* MuxSource.swift */,
+				353F3C4C1C2072DE00D33806 /* MuxOpenFile.swift */,
 			);
 			path = Multiplexer;
 			sourceTree = "<group>";
@@ -242,6 +245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				353F3C4D1C2072DE00D33806 /* MuxOpenFile.swift in Sources */,
 				35DF431D1C1DD00200D4BB7E /* RootViewController.swift in Sources */,
 				3572F9F31C1DD4AC0009D98F /* FuseMultiplexOperations.swift in Sources */,
 				3572F9F51C1DE1A70009D98F /* MuxSource.swift in Sources */,

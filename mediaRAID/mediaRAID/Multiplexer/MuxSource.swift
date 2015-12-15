@@ -24,11 +24,24 @@ class MuxSource {
     /** The workpath is the full basepath + "/.mediaRAID" directory */
     let workpath: String
     
+    
     init(basepath: String) {
         self.basepath = basepath
         self.raidpath = basepath + "/mediaRAID"
         self.workpath = basepath + "/.mediaRAID"
     }
+  
+}
+
+
+// MARK: - Operating System Shims
+
+extension MuxSource {
     
+    func os_stat(path: String, inout stbuf: stat) -> Int32 {
+        let fullpath = raidpath + path
+        let err      = stat(fullpath, &stbuf)
+        return err
+    }
     
 }

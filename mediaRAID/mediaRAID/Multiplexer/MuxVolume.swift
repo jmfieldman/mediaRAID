@@ -26,6 +26,10 @@ class MuxVolume {
     
     private static var _volumeHash: [Int64 : MuxVolume] = [:]
     private static var _nextVolumeIndex: Int64 = 1111
+   
+    /* -- Support Open File Hash -- */
+    private var _volumeFileLookupQueue = dispatch_queue_create("mediaRAID.MuxVolume.volumeFileLookupQueue", DISPATCH_QUEUE_CONCURRENT)
+    private var _volumeFileLookup: [String : MuxOpenFile] = [:]
     
     /* FUSE properties */
     private var fuseChannel: COpaquePointer = nil
@@ -47,6 +51,7 @@ class MuxVolume {
     init() {
         MuxVolume.addVolumeToHash(self)
         __unsafeVolumeIndexPtr.initialize(volumeIndex)
+                
     }
     
     deinit {
@@ -88,21 +93,11 @@ class MuxVolume {
             __currentMuxVolumeIndex = unsafeBitCast(self.__unsafeVolumeIndexPtr, UnsafeMutablePointer<Void>.self)
             
             
-            let err = fuse_loop(self.fuseSession)
+            fuse_loop(self.fuseSession)
             
             if (!self.__wasFUSEd) {
                 OSSpinLockUnlock(&__currentMuxVolumeIndexLock)
-            }
-            
-            
-            print("err: \(err)")
-            
-            fuse_remove_signal_handlers(self.fuseSession)
-            fuse_session_destroy(self.fuseSession)
-            
-            fuse_unmount("/tmp/fusefoo", self.fuseChannel)
-            
-            print("done!")
+            }            
         }
         
         return nil
@@ -115,6 +110,68 @@ class MuxVolume {
 }
 
 
+// MARK: - Active File Handles
+
+extension MuxVolume {
+    
+    /**
+     Gets the current open file for a raid path, or none if none are open.
+     
+     - parameter raidpath: The raid path of the file
+     
+     - returns: The open file handle, or none if none are open
+     */
+    func openFileForPath(raidpath: String) -> MuxOpenFile? {
+        var openFile: MuxOpenFile?
+        dispatch_sync(_volumeFileLookupQueue) {
+            openFile = self._volumeFileLookup[raidpath]
+        }
+        return openFile
+    }
+    
+    /**
+     Set the open file handle for a raid path to a given file
+     
+     - parameter raidpath: The path for the file
+     - parameter file:     The file object, or none to remove
+     */
+    func setOpenFileForPath(raidpath: String, file: MuxOpenFile?) {
+        dispatch_barrier_sync(_volumeFileLookupQueue) {
+            self._volumeFileLookup[raidpath] = file
+        }
+    }
+    
+}
+
+
+// MARK: - RAID Analysis
+
+extension MuxVolume {
+    
+    func mostRecentlyModifiedSourceForPath(raidpath: String) -> (MuxSource, stat)? {
+        
+        var mostRecent: MuxSource?
+        var stbuf = stat()
+        
+        for source in sources {
+            var nstbuf = stat()
+            let err = source.os_stat(raidpath, stbuf: &nstbuf)
+            if (err == 0) {
+                if (mostRecent == nil || nstbuf.st_mtimespec.tv_sec > stbuf.st_mtimespec.tv_sec) {
+                    mostRecent = source
+                    stbuf = nstbuf
+                }
+            }
+        }
+        
+        if (mostRecent != nil) {
+            return (mostRecent!, stbuf)
+        }
+        
+        return nil
+    }
+    
+}
 
 
 
