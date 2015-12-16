@@ -31,6 +31,9 @@ class MuxVolume {
     private var _volumeFileLookupQueue = dispatch_queue_create("mediaRAID.MuxVolume.volumeFileLookupQueue", DISPATCH_QUEUE_CONCURRENT)
     private var _volumeFileLookup: [String : MuxOpenFile] = [:]
     
+    /* -- RW barrier queue for source-based operations -- */
+    private var _volumeSourceModificationQueue = dispatch_queue_create("mediaRAID.MuxVolume.volumeSourceModificationQueue", DISPATCH_QUEUE_CONCURRENT)
+    
     /* FUSE properties */
     private var fuseChannel: COpaquePointer = nil
     private var fuseSession: COpaquePointer = nil
@@ -144,6 +147,34 @@ extension MuxVolume {
 }
 
 
+// MARK: - Synchronization
+
+extension MuxVolume {
+    
+    func iterateSources<T>(block: (source: MuxSource) -> T?) -> T? {
+        var res: T?
+        dispatch_sync(_volumeSourceModificationQueue) {
+            for source in self.sources {
+                res = block(source: source)
+                if (res != nil) {
+                    break
+                }
+            }
+        }
+        return res
+    }
+    
+    func iterateSources(block: (source: MuxSource) -> Void) {
+        dispatch_sync(_volumeSourceModificationQueue) {
+            for source in self.sources {
+                block(source: source)
+            }
+        }
+    }
+    
+}
+
+
 // MARK: - RAID Analysis
 
 extension MuxVolume {
@@ -153,7 +184,7 @@ extension MuxVolume {
         var mostRecent: MuxSource?
         var stbuf = stat()
         
-        for source in sources {
+        iterateSources() { source in
             var nstbuf = stat()
             let err = source.os_stat(raidpath, stbuf: &nstbuf)
             if (err == 0) {
@@ -183,16 +214,45 @@ extension MuxVolume {
     /* -------------------- FUSE OPERATIONS --------------------- */
     /* ---------------------------------------------------------- */
     
+    /**
+    Called when the FUSE system first initializes.  Flag our volume as having been fused.
+    */
     func os_initialize() {
         __wasFUSEd = true
     }
     
+    
+    /**
+     Get the stat data for a given raid path.
+     
+     - parameter path:  The RAID path of the file
+     - parameter stbuf: The resulting stat data
+     
+     - returns: The stat of the given path.  First checks already-open file, then
+                gets the stat of the most recently modified candidate.
+     */
     func os_getattr(path: String, stbuf: UnsafeMutablePointer<stat>) -> Int32 {
-        return 0
+        
+        if let openFile = openFileForPath(path) {
+            var tmp_stbuf = stat()
+            let err = openFile.muxSource.os_stat(path, stbuf: &tmp_stbuf)
+            if (err == 0) {
+                stbuf.memory = tmp_stbuf
+                return err
+            }
+        }
+        
+        if let (_, tmp_stat) = mostRecentlyModifiedSourceForPath(path) {
+            stbuf.memory = tmp_stat
+            return 0
+        }
+        
+        errno = ENOENT
+        return -errno
     }
     
     func os_fgetattr(path: String, stbuf: UnsafeMutablePointer<stat>, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-        return 0
+        return os_getattr(path, stbuf: stbuf)
     }
     
     func os_statfs(path: String, statbuf: UnsafeMutablePointer<statvfs>) -> Int32 {

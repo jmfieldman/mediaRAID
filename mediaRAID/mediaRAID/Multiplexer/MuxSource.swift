@@ -38,8 +38,8 @@ class MuxSource {
 
 extension MuxSource {
     
-    func os_stat(path: String, inout stbuf: stat) -> Int32 {
-        let fullpath = raidpath + path
+    func os_stat(raidpath: String, inout stbuf: stat) -> Int32 {
+        let fullpath = raidpath + raidpath
         let err      = stat(fullpath, &stbuf)
         return err
     }
