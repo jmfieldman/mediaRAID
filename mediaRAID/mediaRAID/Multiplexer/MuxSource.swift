@@ -31,6 +31,18 @@ class MuxSource {
         self.workpath = basepath + "/.mediaRAID"
     }
   
+    func capacityInfo() -> (total: UInt64, free: UInt64)? {
+        var sbuf = statvfs()
+        let err = statvfs(raidpath, &sbuf)
+        
+        if (err != 0) {
+            return nil
+        }
+        
+        return (total: UInt64(sbuf.f_frsize) * UInt64(sbuf.f_blocks),
+                 free: UInt64(sbuf.f_frsize) * UInt64(sbuf.f_bavail))
+    }
+    
 }
 
 

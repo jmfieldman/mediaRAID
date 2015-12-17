@@ -182,6 +182,13 @@ extension MuxVolume {
 
 extension MuxVolume {
     
+    /**
+     Returns the source that contains a version of the file that is the most recently modified.
+     
+     - parameter raidpath: The raid path of the file
+     
+     - returns: The source and stat results for the most recently modified file.
+     */
     func mostRecentlyModifiedSourceForPath(raidpath: String) -> (MuxSource, stat)? {
         
         var mostRecent: MuxSource?
@@ -203,6 +210,41 @@ extension MuxVolume {
         }
         
         return nil
+    }
+    
+    /**
+     Returns the source with the most free space
+     
+     - returns: The source with the most free space, or nil if no sources found.
+     */
+    func sourceWithMostFreeSpace() -> MuxSource? {
+        var mostFree: MuxSource?
+        var mostFreeB: UInt64 = 0
+        
+        iterateSources() { source in
+            if let (_, free) = source.capacityInfo() {
+                if (free > mostFreeB) {
+                    mostFree  = source
+                    mostFreeB = free
+                }
+            }
+        }
+        
+        return mostFree
+    }
+    
+    /**
+     Returns the source appropriate to create a new file at a given path.
+     This function will use various heuristics to determine which
+     source is optimal (free space, directory affinity, etc).
+     
+     - parameter path: The raid path to create a new file in
+     
+     - returns: Returns the best source for the new file, or nil if
+                no sources are available
+     */
+    func sourceForNewFileAtPath(path: String) -> MuxSource? {
+        return sourceWithMostFreeSpace()
     }
     
 }
@@ -256,9 +298,11 @@ extension MuxVolume {
         return -errno
     }
     
+    
     func os_fgetattr(path: String, stbuf: UnsafeMutablePointer<stat>, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
         return os_getattr(path, stbuf: stbuf)
     }
+    
     
     func os_statfs(path: String, statbuf: UnsafeMutablePointer<statvfs>) -> Int32 {
         
@@ -277,6 +321,7 @@ extension MuxVolume {
         
         return err
     }
+    
     
     func os_readdir(path: String, buf: UnsafeMutablePointer<Void>, filler: fuse_fill_dir_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
         
@@ -303,13 +348,47 @@ extension MuxVolume {
         return 0
     }
     
+    
     func os_mknod(path: String, mode: mode_t, dev: dev_t) -> Int32 {
+        
+        if let (_, _) = mostRecentlyModifiedSourceForPath(path) {
+            errno = EEXIST
+            return -errno
+        }
+        
+        guard let source = sourceForNewFileAtPath(path) else {
+            errno = ENOENT
+            return -errno
+        }
+        
+        let fullpath = source.raidpath + path
+        return mknod(fullpath, mode, dev)
+    }
+    
+    
+    func os_create(path: String, mode: mode_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+        
+        if let (_, _) = mostRecentlyModifiedSourceForPath(path) {
+            errno = EEXIST
+            return -errno
+        }
+        
+        guard let source = sourceForNewFileAtPath(path) else {
+            errno = ENOENT
+            return -errno
+        }
+        
+        let fullpath = source.raidpath + path
+        let fh = open(fullpath, O_CREAT | O_TRUNC | O_RDWR, mode)
+        fi.memory.fh = UInt64(fh)
+        
+        if (fh >= 0) {
+            setOpenFileForPath(path, file: MuxOpenFile(fh: fh, raidpath: path, fullpath: fullpath, muxSource: source))
+        }
+        
         return 0
     }
     
-    func os_create(path: String, mode: mode_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-        return 0
-    }
     
     func os_open(path: String, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
         print("os_open")
@@ -336,17 +415,41 @@ extension MuxVolume {
     
     
     func os_read(path: String, buf: UnsafeMutablePointer<Int8>, size: size_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-        return 0
+        
+        if (lseek(Int32(fi.memory.fh), offset, SEEK_SET) < 0) {
+            setOpenFileForPath(path, file: nil)
+            return -1
+        }
+        
+        let res = read(Int32(fi.memory.fh), buf, size)
+        if (res < 0) {
+            return -errno
+        }
+        
+        return Int32(res)
     }
     
     
     func os_write(path: String, buf: UnsafePointer<Int8>, size: size_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-        return 0
+        
+        if (lseek(Int32(fi.memory.fh), offset, SEEK_SET) < 0) {
+            setOpenFileForPath(path, file: nil)
+            return -1
+        }
+        
+        let res = write(Int32(fi.memory.fh), buf, size)
+        if (res < 0) {
+            return -errno
+        }
+        
+        return Int32(res)
     }
     
     
     func os_release(path: String, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
-        return 0
+        let res = close(Int32(fi.memory.fh))
+        setOpenFileForPath(path, file: nil)
+        return res
     }
     
     
