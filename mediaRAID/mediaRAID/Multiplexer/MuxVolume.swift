@@ -54,7 +54,10 @@ class MuxVolume {
     init() {
         MuxVolume.addVolumeToHash(self)
         __unsafeVolumeIndexPtr.initialize(volumeIndex)
-                
+        
+        sources.append(MuxSource(basepath: "/tmp/testbase"))
+        sources.append(MuxSource(basepath: "/tmp/testbase2"))
+        sources.append(MuxSource(basepath: "/tmp/testbase3"))
     }
     
     deinit {
@@ -233,6 +236,8 @@ extension MuxVolume {
      */
     func os_getattr(path: String, stbuf: UnsafeMutablePointer<stat>) -> Int32 {
         
+        print("os_getattr")
+        
         if let openFile = openFileForPath(path) {
             var tmp_stbuf = stat()
             let err = openFile.muxSource.os_stat(path, stbuf: &tmp_stbuf)
@@ -256,10 +261,45 @@ extension MuxVolume {
     }
     
     func os_statfs(path: String, statbuf: UnsafeMutablePointer<statvfs>) -> Int32 {
-        return 0
+        
+        print("os_statfs")
+        
+        var err: Int32 = 0
+        
+        let _: Int32? = iterateSources() { source in
+            err = source.os_statvfs(path, statbuf: statbuf)
+            if (err == 0) {
+                return 0
+            }
+            err = -errno
+            return nil
+        }
+        
+        return err
     }
     
     func os_readdir(path: String, buf: UnsafeMutablePointer<Void>, filler: fuse_fill_dir_t, offset: off_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+        
+        print("os_readdir")
+        
+        /* Fill out basic dot dirs */
+        filler(buf, ".", nil, 0);
+        filler(buf, "..", nil, 0);
+        
+        let fileManager = NSFileManager.defaultManager()
+        var filenames   = Set<String>()
+        
+        iterateSources() { source in
+            let fulldir = source.raidpath + path
+            if let contents = try? fileManager.contentsOfDirectoryAtPath(fulldir) {
+                filenames.unionInPlace(contents)
+            }
+        }
+        
+        for filename in filenames {
+            filler(buf, filename, nil, 0)
+        }
+        
         return 0
     }
     
@@ -272,6 +312,25 @@ extension MuxVolume {
     }
     
     func os_open(path: String, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
+        print("os_open")
+        
+        if let openFile = openFileForPath(path) {
+            fi.memory.fh = UInt64(openFile.fh)
+            return 0
+        }
+        
+        guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
+            return -ENOENT
+        }
+        
+        let fullpath = source.raidpath + path
+        let fh: CFileHandle = open(fullpath, fi.memory.flags)
+        fi.memory.fh = UInt64(fh)
+        
+        if (fh >= 0) {
+            setOpenFileForPath(path, file: MuxOpenFile(fh: fh, raidpath: path, fullpath: fullpath, muxSource: source))
+        }
+        
         return 0
     }
     

@@ -97,7 +97,7 @@ func multiplex_init(conn: UnsafeMutablePointer<fuse_conn_info>) -> UnsafeMutable
 
 
 func multiplex_getattr(path: UnsafePointer<Int8>, stbuf: UnsafeMutablePointer<stat>) -> Int32 {
-    print("getattr")
+    
     let volumeIndex = unsafeBitCast(fuse_get_context().memory.private_data, UnsafeMutablePointer<Int64>.self).memory
     
     guard let path = String.fromCString(path) else {
@@ -109,7 +109,7 @@ func multiplex_getattr(path: UnsafePointer<Int8>, stbuf: UnsafeMutablePointer<st
         errno = ENOENT
         return -1
     }
-    print("getattr2 \(volumeIndex)")
+    
     return volume.os_getattr(path, stbuf: stbuf)
     
 }

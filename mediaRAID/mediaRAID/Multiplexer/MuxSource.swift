@@ -38,10 +38,14 @@ class MuxSource {
 
 extension MuxSource {
     
-    func os_stat(raidpath: String, inout stbuf: stat) -> Int32 {
-        let fullpath = raidpath + raidpath
+    func os_stat(path: String, inout stbuf: stat) -> Int32 {
+        let fullpath = self.raidpath + path
         let err      = stat(fullpath, &stbuf)
         return err
     }
     
+    func os_statvfs(path: String, statbuf: UnsafeMutablePointer<statvfs>) -> Int32 {
+        let fullpath = self.raidpath + path
+        return statvfs(fullpath, statbuf)
+    }
 }
