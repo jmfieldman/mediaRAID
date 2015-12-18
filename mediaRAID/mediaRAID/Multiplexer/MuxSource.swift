@@ -61,3 +61,7 @@ extension MuxSource {
         return statvfs(fullpath, statbuf)
     }
 }
+
+func ==(lhs: MuxSource, rhs: MuxSource) -> Bool {
+    return lhs.basepath == rhs.basepath
+}
