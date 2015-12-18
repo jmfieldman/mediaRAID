@@ -472,47 +472,188 @@ extension MuxVolume {
     
     
     func os_rename(oldpath oldpath: String, newpath: String) -> Int32 {
-        return 0
+        
+        var succeeded = false
+        var failedSources: [MuxSource] = []
+        
+        iterateSources() { source in
+            let res = source.os_rename(oldpath, newpath: newpath)
+            if (res != 0) {
+                failedSources.append(source)
+            } else {
+                succeeded = true
+            }
+        }
+        
+        if (succeeded) {
+            for source in failedSources {
+                source.os_unlink(oldpath)
+            }
+            return 0
+        }
+        
+        errno = EIO
+        return -EIO
     }
     
     
     func os_unlink(path: String) -> Int32 {
-        return 0
+        
+        var res: Int32 = 0
+        var succeeded = true
+        var didUnlink = false
+        
+        iterateSources() { source in
+            if (NSFileManager.defaultManager().fileExistsAtPath(source.raidpath + path)) {
+                let tres = source.os_unlink(path)
+                if (tres != 0) {
+                    res = tres
+                    succeeded = false
+                } else {
+                    didUnlink = true
+                }
+            }
+        }
+        
+        if (succeeded && !didUnlink) {
+            errno = ENOENT
+            return -ENOENT
+        }
+        
+        return res
     }
     
     
     func os_access(path: String, amode: Int32) -> Int32 {
-        return 0
+        
+        if let openFile = openFileForPath(path) {
+            return openFile.muxSource.os_access(path, amode: amode)
+        }
+        
+        guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
+            errno = ENOENT
+            return -ENOENT
+        }
+        
+        return source.os_access(path, amode: amode)
     }
     
     
     func os_rmdir(path: String) -> Int32 {
-        return 0
+        
+        var found = false
+        var err: Int32 = 0
+        
+        iterateSources() { source in
+            let (exists, isdir) = source.fileExistsAtRAIDPath(path)
+            if (exists && isdir) {
+                found = true
+                let terr = source.os_rmdir(path)
+                if (terr != 0) {
+                    err = terr
+                }
+            }
+        }
+        
+        if (!found) {
+            errno = ENOENT
+            return -ENOENT
+        }
+        
+        return err
     }
     
     
     func os_mkdir(path: String, mode: mode_t) -> Int32 {
-        return 0
+        
+        var err: Int32 = 0
+        
+        iterateSources() { source in
+            let terr = source.os_mkdir(path, mode: mode)
+            if (terr != 0) {
+                err = terr
+            }
+        }
+        
+        return err
     }
     
     
     func os_chmod(path: String, mode: mode_t) -> Int32 {
-        return 0
+        
+        var err: Int32 = 0
+        
+        iterateSources() { source in
+            let terr = source.os_chmod(path, mode: mode)
+            if (terr != 0) {
+                err = terr
+            }
+        }
+        
+        return err
     }
     
     
     func os_chown(path: String, uid: uid_t, gid: gid_t) -> Int32 {
-        return 0
+
+        var err: Int32 = 0
+        
+        iterateSources() { source in
+            let terr = source.os_chown(path, uid: uid, gid: gid)
+            if (terr != 0) {
+                err = terr
+            }
+        }
+        
+        return err
     }
     
     
     func os_truncate(path: String, length: off_t) -> Int32 {
-        return 0
+        
+        if let openFile = openFileForPath(path) {
+            return ftruncate(openFile.fh, length)
+        }
+        
+        guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
+            errno = ENOENT
+            return -ENOENT
+        }
+        
+        return source.os_truncate(path, length: length)
     }
     
     
     func os_utimens(path: String, tv: UnsafePointer<timespec>) -> Int32 {
-        return 0
+        
+        let tbuf: UnsafeMutablePointer<timeval> = UnsafeMutablePointer<timeval>.alloc(2)
+        
+        tbuf.memory.tv_sec  = tv.memory.tv_sec
+        tbuf.memory.tv_usec = suseconds_t(tv.memory.tv_nsec / 1000)
+        let ntv = tv.advancedBy(1)
+        let utv = tbuf.advancedBy(1)
+        utv.memory.tv_sec   = ntv.memory.tv_sec
+        utv.memory.tv_usec  = suseconds_t(ntv.memory.tv_nsec / 1000)
+        
+        var err: Int32 = 0
+        var found = false
+        
+        iterateSources() { source in
+            if (source.fileExistsAtRAIDPath(path).exists) {
+                found = true
+                let terr = utimes(source.raidpath + path, tbuf)
+                if (terr != 0) {
+                    err = terr
+                }
+            }
+        }
+     
+        if (!found) {
+            errno = ENOENT
+            return -ENOENT
+        }
+        
+        return err
     }
     
     
