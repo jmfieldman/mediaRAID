@@ -11,7 +11,7 @@ import Foundation
 /**
 The MuxSource class identifies a single source that feeds into a MuxVolume
 */
-class MuxSource {
+class MuxSource : Equatable {
     
     /** The basepath is the path to the pre-"mediaRAID" directory.
         This path must contain the mediaRAID and .mediaRAID directories
