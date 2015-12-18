@@ -156,8 +156,18 @@ extension MuxVolume {
     
     func addSource(source: MuxSource) {
         dispatch_barrier_sync(_volumeSourceModificationQueue) {
-            if (self.sources.contains(source)) {
-                
+            guard !self.sources.contains(source) else {
+                return
+            }
+            
+            self.sources.append(source)
+        }
+    }
+    
+    func removeSource(source: MuxSource) {
+        dispatch_barrier_sync(_volumeSourceModificationQueue) {
+            if let idx = self.sources.indexOf(source) {
+                self.sources.removeAtIndex(idx)
             }
         }
     }
