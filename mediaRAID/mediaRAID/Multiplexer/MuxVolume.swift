@@ -150,9 +150,17 @@ extension MuxVolume {
 }
 
 
-// MARK: - Synchronization
+// MARK: - Source Synchronization
 
 extension MuxVolume {
+    
+    func addSource(source: MuxSource) {
+        dispatch_barrier_sync(_volumeSourceModificationQueue) {
+            if (self.sources.contains(source)) {
+                
+            }
+        }
+    }
     
     func iterateSources<T>(block: (source: MuxSource) -> T?) -> T? {
         var res: T?
