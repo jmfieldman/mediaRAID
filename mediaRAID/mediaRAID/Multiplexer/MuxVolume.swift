@@ -71,7 +71,7 @@ class MuxVolume {
         
         let fuseQueue = dispatch_queue_create("mediaRAID.MuxVolume.FUSEQueue \(volumeIndex)", nil)
         
-        let arguments: [String] = ["", "-o", "default_permissions", "-o", "allow_other"]
+        let arguments: [String] = ["", "-o", "default_permissions", "-o", "allow_other" , "-o" , "volname=MEDIARAID" ]
         var cargs = arguments.map { strdup($0) }
         var fargs: fuse_args = fuse_args(argc: Int32(cargs.count), argv: &cargs, allocated: 0)
         var fops = multiplex_operations()
