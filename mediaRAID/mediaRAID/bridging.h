@@ -11,9 +11,9 @@
 
 
 #define _FILE_OFFSET_BITS 64
-#define FUSE_USE_VERSION  26
-#include <osxfuse/fuse.h>
-#include <osxfuse/fuse/fuse_lowlevel.h>
+#define FUSE_USE_VERSION  29
+#include <fuse.h>
+#include <fuse/fuse_lowlevel.h>
 
 
 #endif

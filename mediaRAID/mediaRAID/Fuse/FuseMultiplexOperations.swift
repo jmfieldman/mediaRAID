@@ -16,43 +16,43 @@ func multiplex_operations() -> fuse_operations {
     
     return fuse_operations.init(
         getattr:        multiplex_getattr,
-        readlink:       nil,
-        getdir:         nil,
+        readlink:       nil, // No symlink support in mediaRAID
+        getdir:         nil, // deprecated (readdir)
         mknod:          multiplex_mknod,
         mkdir:          multiplex_mkdir,
         unlink:         multiplex_unlink,
         rmdir:          multiplex_rmdir,
-        symlink:        nil,
+        symlink:        nil, // No symlink support in mediaRAID
         rename:         multiplex_rename,
-        link:           nil,
+        link:           nil, // No hardlink support in mediaRAID
         chmod:          multiplex_chmod,
         chown:          multiplex_chown,
         truncate:       multiplex_truncate,
-        utime:          nil,
+        utime:          nil, // deprecated (utimens)
         open:           multiplex_open,
         read:           multiplex_read,
         write:          multiplex_write,
         statfs:         multiplex_statfs,
-        flush:          nil,
+        flush:          nil, // No data is cached by mediaRAID
         release:        multiplex_release,
-        fsync:          nil,
+        fsync:          nil, // No data is cached by mediaRAID
         setxattr:       multiplex_setxattr,
         getxattr:       multiplex_getxattr,
         listxattr:      multiplex_listxattr,
         removexattr:    multiplex_removexattr,
-        opendir:        nil,
+        opendir:        nil, // Not needed since using default_permissions
         readdir:        multiplex_readdir,
-        releasedir:     nil,
-        fsyncdir:       nil,
+        releasedir:     nil, // Not using opendir
+        fsyncdir:       nil, // No data is cached by mediaRAID
         `init`:         multiplex_init,
-        destroy:        nil,
-        access:         nil,
+        destroy:        nil, // TBD
+        access:         multiplex_access,
         create:         multiplex_create,
-        ftruncate:      nil,
+        ftruncate:      nil, // Falls back to truncate
         fgetattr:       multiplex_fgetattr,
-        lock:           nil,
+        lock:           nil, // TODO
         utimens:        multiplex_utimens,
-        bmap:           nil,
+        bmap:           nil, // Not used
         reserved00:     nil,
         reserved01:     nil,
         reserved02:     nil,
