@@ -42,17 +42,15 @@ class MuxSource : Equatable {
         return (total: UInt64(sbuf.f_frsize) * UInt64(sbuf.f_blocks),
                  free: UInt64(sbuf.f_frsize) * UInt64(sbuf.f_bavail))
     }
-    
-    func fileExistsAtRAIDPath(path: String) -> (exists: Bool, isDir: Bool) {
-        var isDir: ObjCBool = false
-        let exists = NSFileManager.defaultManager().fileExistsAtPath(self.raidpath + path, isDirectory: &isDir)
-        return (exists: exists, isDir: Bool(isDir))
-    }
-    
+        
     func fileExistsAtFullPath(path: String) -> (exists: Bool, isDir: Bool) {
         var isDir: ObjCBool = false
         let exists = NSFileManager.defaultManager().fileExistsAtPath(path, isDirectory: &isDir)
         return (exists: exists, isDir: Bool(isDir))
+    }
+    
+    func fileExistsAtRAIDPath(path: String) -> (exists: Bool, isDir: Bool) {
+        return fileExistsAtFullPath(self.raidpath + path)
     }
     
     func ensureParentDirectoryForFullPath(path: String) -> Bool {
@@ -149,6 +147,22 @@ extension MuxSource {
     
     func os_truncate(path: String, length: off_t) -> Int32 {
         return truncate(self.raidpath + path, length)
+    }
+    
+    func os_setxattr(path: String, name: UnsafePointer<Int8>, value: UnsafePointer<Int8>, size: size_t, options: Int32, position: UInt32) -> Int32 {
+        return setxattr(self.raidpath + path, name, value, size, position, options)
+    }
+    
+    func os_getxattr(path: String, name: UnsafePointer<Int8>, value: UnsafeMutablePointer<Int8>, size: size_t, position: UInt32) -> Int32 {
+        return Int32(getxattr(self.raidpath + path, name, value, size, position, 0))
+    }
+    
+    func os_listxattr(path: String, namebuf: UnsafeMutablePointer<Int8>, size: size_t) -> Int32 {
+        return Int32(listxattr(self.raidpath + path, namebuf, size, 0))
+    }
+    
+    func os_removexattr(path: String, name: UnsafePointer<Int8>) -> Int32 {
+        return removexattr(self.raidpath + path, name, 0)
     }
     
 }

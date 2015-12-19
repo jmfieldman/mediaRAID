@@ -312,7 +312,6 @@ extension MuxVolume {
             return 0
         }
         
-        errno = ENOENT
         return -errno
     }
     
@@ -370,12 +369,10 @@ extension MuxVolume {
     func os_mknod(path: String, mode: mode_t, dev: dev_t) -> Int32 {
         
         if let (_, _) = mostRecentlyModifiedSourceForPath(path) {
-            errno = EEXIST
             return -errno
         }
         
         guard let source = sourceForNewFileAtPath(path) else {
-            errno = ENOENT
             return -errno
         }
         
@@ -387,12 +384,10 @@ extension MuxVolume {
     func os_create(path: String, mode: mode_t, fi: UnsafeMutablePointer<fuse_file_info>) -> Int32 {
         
         if let (_, _) = mostRecentlyModifiedSourceForPath(path) {
-            errno = EEXIST
             return -errno
         }
         
         guard let source = sourceForNewFileAtPath(path) else {
-            errno = ENOENT
             return -errno
         }
         
@@ -492,7 +487,6 @@ extension MuxVolume {
             return 0
         }
         
-        errno = EIO
         return -EIO
     }
     
@@ -516,7 +510,6 @@ extension MuxVolume {
         }
         
         if (succeeded && !didUnlink) {
-            errno = ENOENT
             return -ENOENT
         }
         
@@ -531,7 +524,6 @@ extension MuxVolume {
         }
         
         guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
-            errno = ENOENT
             return -ENOENT
         }
         
@@ -556,7 +548,6 @@ extension MuxVolume {
         }
         
         if (!found) {
-            errno = ENOENT
             return -ENOENT
         }
         
@@ -581,13 +572,21 @@ extension MuxVolume {
     
     func os_chmod(path: String, mode: mode_t) -> Int32 {
         
+        var found = false
         var err: Int32 = 0
         
         iterateSources() { source in
-            let terr = source.os_chmod(path, mode: mode)
-            if (terr != 0) {
-                err = terr
+            if (source.fileExistsAtRAIDPath(path).exists) {
+                found = true
+                let terr = source.os_chmod(path, mode: mode)
+                if (terr != 0) {
+                    err = terr
+                }
             }
+        }
+        
+        if (!found) {
+            return -ENOENT
         }
         
         return err
@@ -596,13 +595,21 @@ extension MuxVolume {
     
     func os_chown(path: String, uid: uid_t, gid: gid_t) -> Int32 {
 
+        var found = false
         var err: Int32 = 0
         
         iterateSources() { source in
-            let terr = source.os_chown(path, uid: uid, gid: gid)
-            if (terr != 0) {
-                err = terr
+            if (source.fileExistsAtRAIDPath(path).exists) {
+                found = true
+                let terr = source.os_chown(path, uid: uid, gid: gid)
+                if (terr != 0) {
+                    err = terr
+                }
             }
+        }
+        
+        if (!found) {
+            return -ENOENT
         }
         
         return err
@@ -616,7 +623,6 @@ extension MuxVolume {
         }
         
         guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
-            errno = ENOENT
             return -ENOENT
         }
         
@@ -649,7 +655,6 @@ extension MuxVolume {
         }
      
         if (!found) {
-            errno = ENOENT
             return -ENOENT
         }
         
@@ -658,22 +663,76 @@ extension MuxVolume {
     
     
     func os_setxattr(path: String, name: UnsafePointer<Int8>, value: UnsafePointer<Int8>, size: size_t, options: Int32, position: UInt32) -> Int32 {
-        return 0
+        
+        var found = false
+        var err: Int32 = 0
+        
+        iterateSources() { source in
+            if (source.fileExistsAtRAIDPath(path).exists) {
+                found = true
+                let terr = source.os_setxattr(path, name: name, value: value, size: size, options: options, position: position)
+                if (terr != 0) {
+                    err = terr
+                }
+            }
+        }
+        
+        if (!found) {
+            return -ENOENT
+        }
+        
+        return err
     }
     
     
     func os_getxattr(path: String, name: UnsafePointer<Int8>, value: UnsafeMutablePointer<Int8>, size: size_t, position: UInt32) -> Int32 {
-        return 0
+
+        if let openFile = openFileForPath(path) {
+            return openFile.muxSource.os_getxattr(path, name: name, value: value, size: size, position: position)
+        }
+        
+        guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
+            return -ENOENT
+        }
+        
+        return source.os_getxattr(path, name: name, value: value, size: size, position: position)
     }
     
     
     func os_listxattr(path: String, namebuf: UnsafeMutablePointer<Int8>, size: size_t) -> Int32 {
-        return 0
+        
+        if let openFile = openFileForPath(path) {
+            return openFile.muxSource.os_listxattr(path, namebuf: namebuf, size: size)
+        }
+        
+        guard let (source, _) = mostRecentlyModifiedSourceForPath(path) else {
+            return -ENOENT
+        }
+        
+        return source.os_listxattr(path, namebuf: namebuf, size: size)
     }
     
     
     func os_removexattr(path: String, name: UnsafePointer<Int8>) -> Int32 {
-        return 0
+        
+        var found = false
+        var err: Int32 = 0
+        
+        iterateSources() { source in
+            if (source.fileExistsAtRAIDPath(path).exists) {
+                found = true
+                let terr = source.os_removexattr(path, name: name)
+                if (terr != 0) {
+                    err = terr
+                }
+            }
+        }
+        
+        if (!found) {
+            return -ENOENT
+        }
+        
+        return err
     }
 
 }
