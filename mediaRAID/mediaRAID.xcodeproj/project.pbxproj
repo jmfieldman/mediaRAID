@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		353F3C4D1C2072DE00D33806 /* MuxOpenFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F3C4C1C2072DE00D33806 /* MuxOpenFile.swift */; };
+		353F3C501C2EF3CA00D33806 /* ReplicationOp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F3C4F1C2EF3CA00D33806 /* ReplicationOp.swift */; };
+		353F3C521C2EF3EC00D33806 /* ReplicationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F3C511C2EF3EC00D33806 /* ReplicationEngine.swift */; };
+		353F3C541C2EF7B400D33806 /* ReplicationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F3C531C2EF7B400D33806 /* ReplicationQueue.swift */; };
 		3572F9F11C1DD4AC0009D98F /* MuxVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */; };
 		3572F9F31C1DD4AC0009D98F /* FuseMultiplexOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9F01C1DD4AC0009D98F /* FuseMultiplexOperations.swift */; };
 		3572F9F51C1DE1A70009D98F /* MuxSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3572F9F41C1DE1A70009D98F /* MuxSource.swift */; };
@@ -20,6 +23,9 @@
 
 /* Begin PBXFileReference section */
 		353F3C4C1C2072DE00D33806 /* MuxOpenFile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MuxOpenFile.swift; sourceTree = "<group>"; };
+		353F3C4F1C2EF3CA00D33806 /* ReplicationOp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplicationOp.swift; sourceTree = "<group>"; };
+		353F3C511C2EF3EC00D33806 /* ReplicationEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplicationEngine.swift; sourceTree = "<group>"; };
+		353F3C531C2EF7B400D33806 /* ReplicationQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplicationQueue.swift; sourceTree = "<group>"; };
 		3572F9D41C1DD26E0009D98F /* bridging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bridging.h; sourceTree = "<group>"; };
 		3572F9ED1C1DD4AC0009D98F /* MuxVolume.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MuxVolume.swift; sourceTree = "<group>"; };
 		3572F9F01C1DD4AC0009D98F /* FuseMultiplexOperations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FuseMultiplexOperations.swift; sourceTree = "<group>"; };
@@ -47,6 +53,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		353F3C4E1C2EF3BF00D33806 /* Replication */ = {
+			isa = PBXGroup;
+			children = (
+				353F3C4F1C2EF3CA00D33806 /* ReplicationOp.swift */,
+				353F3C511C2EF3EC00D33806 /* ReplicationEngine.swift */,
+				353F3C531C2EF7B400D33806 /* ReplicationQueue.swift */,
+			);
+			path = Replication;
+			sourceTree = "<group>";
+		};
 		3572F9EC1C1DD4AC0009D98F /* Multiplexer */ = {
 			isa = PBXGroup;
 			children = (
@@ -87,6 +103,7 @@
 		35DF430D1C1DC77D00D4BB7E /* mediaRAID */ = {
 			isa = PBXGroup;
 			children = (
+				353F3C4E1C2EF3BF00D33806 /* Replication */,
 				3572F9EC1C1DD4AC0009D98F /* Multiplexer */,
 				3572F9EF1C1DD4AC0009D98F /* Fuse */,
 				35DF431B1C1DCFE800D4BB7E /* Controllers */,
@@ -247,9 +264,12 @@
 			files = (
 				353F3C4D1C2072DE00D33806 /* MuxOpenFile.swift in Sources */,
 				35DF431D1C1DD00200D4BB7E /* RootViewController.swift in Sources */,
+				353F3C521C2EF3EC00D33806 /* ReplicationEngine.swift in Sources */,
 				3572F9F31C1DD4AC0009D98F /* FuseMultiplexOperations.swift in Sources */,
+				353F3C541C2EF7B400D33806 /* ReplicationQueue.swift in Sources */,
 				3572F9F51C1DE1A70009D98F /* MuxSource.swift in Sources */,
 				3572F9F11C1DD4AC0009D98F /* MuxVolume.swift in Sources */,
+				353F3C501C2EF3CA00D33806 /* ReplicationOp.swift in Sources */,
 				35DF430F1C1DC77D00D4BB7E /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
