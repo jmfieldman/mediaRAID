@@ -7,3 +7,15 @@
 //
 
 import Foundation
+
+
+class ReplicationOp {
+    let raidpath: String
+    let isDir:    Bool
+    
+    init(raidpath: String, isDir: Bool) {
+        self.raidpath = raidpath
+        self.isDir    = isDir
+    }
+    
+}

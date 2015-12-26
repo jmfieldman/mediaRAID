@@ -7,3 +7,19 @@
 //
 
 import Foundation
+
+class ReplicationEngine {
+    
+    private weak var muxVolume: MuxVolume?
+    
+    private let opQueue = ReplicationQueue()
+    
+    func start() {
+        
+    }
+    
+    func stop() {
+        
+    }
+    
+}
